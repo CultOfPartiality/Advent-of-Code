@@ -15,27 +15,35 @@ $inputText = Get-Content $inputSource
 $seeds = ($inputText[0] | Select-String '.*: (\d+ *)+').Matches.Groups[1].Captures.Value.Trim()
 
 Clear-Variable maps
-$maps = @(@{})
+$maps = @(,@())
 
 $range = 3..($inputText.Count-1)
 $inputText[$range] | ForEach-Object{
     if($_ -match 'map:'){
-        $maps += @{}
+        $maps += ,@()
     }
     elseif($_ -ne ''){
-
-        #####this needs to be maths, not preallocated array
         $destStart, $sourceStart, $mapLen = $_.Trim() -split ' '
-        for ($j = 0; $j -lt $mapLen; $j++) {
-            $maps[-1].Add([string]([long]$sourceStart + $j), [string]([long]$destStart + $j))
+        $maps[-1]+= [PSCustomObject]@{
+            sourceStart = [long]$sourceStart;
+            destStart = [long]$destStart;
+            mapLen = [long]$mapLen;
         }
     }
 }
 $locations = $seeds | ForEach-Object{
-    $currVal = $_
+    $currVal = [long]$_
     $maps | ForEach-Object{
-        $map = $_
-        $currVal = $map.ContainsKey("$currVal") ? $map["$currVal"] : $currVal
+        foreach ($mapping in $_) {
+            if( ($currVal -ge $mapping.sourceStart) -and 
+                ($currVal -lt ($mapping.sourceStart + $mapping.mapLen)) )
+            {
+                $offset = $currVal - $mapping.sourceStart
+                #new value
+                $currVal = $mapping.destStart + $offset
+                break # go to next map
+            }
+        }
     }
     $currVal
 }
