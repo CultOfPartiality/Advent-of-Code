@@ -17,20 +17,48 @@ $inputText[2..$inputText.Length] | %{
         name = $nodeName;
         L = $leftNode;
         R = $rightNode;
+        stepsToZ = @();
     }
 }
 
 $currentNodes = $nodes.Values | where {$_.Name[2] -eq "A"}
 
 # =================== Walk Nodes =================== #
-$directionIndex = 0
-$steps = 0
-while ( ($currentNodes.name | where {$_[2] -ne "Z"}).Count -ne 0 ) {
-    $currentNodes =  $currentNodes | % {
-        $nextNode = $_."$($directions[$directionIndex])"
-        $nodes."$nextNode"    
+$loopCounts = $currentNodes | ForEach-Object {
+    $node = $_
+    $directionIndex = 0
+    $steps=0
+    while ($node.name[2] -ne "Z") {
+        $steps++
+        $nextNode = $node."$($directions[$directionIndex])"
+        $node = $nodes."$nextNode"
+
+        $directionIndex = $directionIndex -ge ($directions.Length-1) ? 0 : $directionIndex+1
     }
-    $steps++
-    $directionIndex = $directionIndex -ge ($directions.Length-1) ? 0 : $directionIndex+1
+    $steps
 }
-write-host "$steps steps taken for all starts to reach --Z"
+
+#while( ($loopCounts|group).length -gt 1){$loopCounts=$loopCounts|sort;$loopCounts[0] *= 2}
+
+function gcd{ 
+    param ($a,$b)
+    #Euclidean Algorithm
+    while($b -ne 0){
+        $temp = $b
+        $b = $a % $b
+        $a = $temp 
+    }
+    $a
+}
+
+function lcm{
+    param($a,$b)
+    $a * ($b/(gcd $a $b))
+}
+
+$combo = $loopCounts
+while(($combo).Count -gt 1){
+    $combo[1] = lcm $combo[0] $combo[1] 
+    $combo = $combo[1..($combo.length-1)]
+}
+$combo
