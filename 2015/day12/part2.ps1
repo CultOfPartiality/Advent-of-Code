@@ -5,14 +5,19 @@ function Total-Numbers {
         if($showWorking){Write-Host "Input string length: $($rawInput.Length)"}
 
         #Find any object with :"red" in it. Remove this
-        $rawInput = $rawInput -replace '{[^\[\]{}]*?:"red"[^\[\]{}]*?}',''
+        
+        do {
+            $rawInputLenPrev = $rawInput.Length
+            $rawInput = $rawInput -replace '{[^\[\]{}]*?:"red"[^\[\]{}]*?}',''
+        } while ($rawInput.Length -ne $rawInputLenPrev)
 
         #Turn arrays and objects into numbers
-        $rawInput | Select-String '({[^\[\]{}]*?(?!:"red")[^\[\]{}]*?})|(\[[^\[\]{}]*?\])' -AllMatches | 
-        select -ExpandProperty Matches | %{
+        $matchedGroups = $rawInput | Select-String '({[^][{}]*?})|(\[[^][{}]*?\])' -AllMatches | 
+        select -ExpandProperty Matches -Unique
+        $matchedGroups | %{
             
-            $numsSum = $_ | Select-String '(-?\d+)' -AllMatches | select -ExpandProperty Matches | 
-                %{[int]$_.Value} | measure -sum | select -ExpandProperty sum
+            $matchedNums = $_ | Select-String '(-?\d+)' -AllMatches | select -ExpandProperty Matches
+            $numsSum = $matchedNums | %{[int]$_.Value} | measure -sum | select -ExpandProperty sum
             
             $rawInput = $rawInput.Replace($_.Value,$numsSum)
         } 
