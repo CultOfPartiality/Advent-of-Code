@@ -16,7 +16,7 @@ function Unit-Test {
     $answer = $function.InvokeReturnAsIs($inputData)
     if($answer -eq $expectedAnswer){
         write-host "Example passed ✔ " -ForegroundColor Green
-        Return $true
+        #Return $true
     }
     else{
         write-host "Example failed ✖  | " -NoNewline -ForegroundColor Red
