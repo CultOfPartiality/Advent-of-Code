@@ -58,7 +58,6 @@ function part1 {
 
 $expansion = 2
 Unit-Test ${function:part1} "$PSScriptRoot\testcases\Part1_374.txt" 374
-# Unit-Test ${function:part1} "$PSScriptRoot\testcases\test2_8.txt" 8
 $expansion = 10
 Unit-Test ${function:part1} "$PSScriptRoot\testcases\Part1_374.txt" 1030
 $expansion = 100
