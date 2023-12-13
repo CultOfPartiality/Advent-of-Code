@@ -4,7 +4,11 @@ function Check-NonogramRow{
 	param ([string]$Row)
 
 	$map,$clue = $Row -split " "
+	$map = $map,$map,$map,$map,$map -join "?"
+	$clue = $clue,$clue,$clue,$clue,$clue -join ","
+	
 	$clues = $clue -split "," | %{[int]$_}
+
 	$spacesCount = $map.Length - ($clues|measure -Sum).Sum
 	$moveableSpaces = $spacesCount - ($clues.count - 1)
 
@@ -56,14 +60,14 @@ function Check-NonogramRow{
 }
 
 Unit-Test ${function:Check-NonogramRow} "???.### 1,1,3" 1
-Unit-Test ${function:Check-NonogramRow} ".??..??...?##. 1,1,3" 4
+Unit-Test ${function:Check-NonogramRow} ".??..??...?##. 1,1,3" 16384
 Unit-Test ${function:Check-NonogramRow} "?#?#?#?#?#?#?#? 1,3,1,6" 1
-Unit-Test ${function:Check-NonogramRow} "????.#...#... 4,1,1"  1
-Unit-Test ${function:Check-NonogramRow} "????.######..#####. 1,6,5" 4
-Unit-Test ${function:Check-NonogramRow} "?###???????? 3,2,1" 10
+Unit-Test ${function:Check-NonogramRow} "????.#...#... 4,1,1"  16
+Unit-Test ${function:Check-NonogramRow} "????.######..#####. 1,6,5" 2500
+Unit-Test ${function:Check-NonogramRow} "?###???????? 3,2,1" 506250
 
 $result = Get-Content "$PSScriptRoot\input.txt" | %{
 	Check-NonogramRow $_
 } | measure -sum | select -ExpandProperty Sum
 
-Write-Host "Part 1: $result" -ForegroundColor Magenta
+Write-Host "Part 2: $result" -ForegroundColor Magenta
