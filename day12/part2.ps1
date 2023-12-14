@@ -31,14 +31,14 @@ function Check-NonogramRow{
 		$playArea = ($playArea,('.'*$spareSpaces) -join '').Substring(0,$map.Length)
 		
 		#check against original map
-		#Write-Host $map -ForegroundColor DarkGray
+		Write-Host $map -ForegroundColor DarkGray
 		$valid = (0..($map.Length-1) | %{$map[$_] -eq "?" -or $map[$_] -eq $playArea[$_]} | where{$_ -eq $false}).count -eq 0
 		if($valid){
 			$validCount++
-			#Write-Host $playArea "->" ($spaces -join '') $spareSpaces -ForegroundColor Green
+			Write-Host $playArea "->" ($spaces -join '') $spareSpaces -ForegroundColor Green
 		}
 		else{
-			#Write-Host $playArea "->" ($spaces -join '') $spareSpaces -ForegroundColor Red
+			Write-Host $playArea "->" ($spaces -join '') $spareSpaces -ForegroundColor Red
 		}
 
 		#go to the next set for spaces
@@ -60,10 +60,10 @@ function Check-NonogramRow{
 }
 
 Unit-Test ${function:Check-NonogramRow} "???.### 1,1,3" 1
-Unit-Test ${function:Check-NonogramRow} ".??..??...?##. 1,1,3" 16384
 Unit-Test ${function:Check-NonogramRow} "?#?#?#?#?#?#?#? 1,3,1,6" 1
 Unit-Test ${function:Check-NonogramRow} "????.#...#... 4,1,1"  16
 Unit-Test ${function:Check-NonogramRow} "????.######..#####. 1,6,5" 2500
+Unit-Test ${function:Check-NonogramRow} ".??..??...?##. 1,1,3" 16384
 Unit-Test ${function:Check-NonogramRow} "?###???????? 3,2,1" 506250
 
 $result = Get-Content "$PSScriptRoot\input.txt" | %{
