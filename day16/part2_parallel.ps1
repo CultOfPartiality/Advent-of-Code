@@ -14,23 +14,22 @@ function Solution {
     $vert1 = 0..($boardHeight - 1) | ForEach-Object -Parallel {
         ${function:Test-Start} = $using:funcDef
         write-host "Vert1 $($_+1)/$using:boardHeight"
-        Test-Start -Path $using:Path -startLaser ([PSCustomObject]@{ x = 0; y = $_; direction = "right" })
-        Test-Start -Path $using:Path -startLaser ([PSCustomObject]@{ x = $using:boardWidth-1; y = $_; direction = "left" })
-    } -ThrottleLimit 30
+        Test-Start -data $using:data -startLaser ([PSCustomObject]@{ x = 0; y = $_; direction = "right" })
+        Test-Start -data $using:data -startLaser ([PSCustomObject]@{ x = $using:boardWidth-1; y = $_; direction = "left" })
+    } -ThrottleLimit 120
+    #[gc]::Collect()
     $hozis = 0..($boardWidth - 1) | ForEach-Object -Parallel {
         ${function:Test-Start} = $using:funcDef
         write-host "Hoz $($_+1)/$using:boardWidth"
-        Test-Start -Path $using:Path -startLaser ([PSCustomObject]@{ x = $_; y = 0; direction = "down" })
-        Test-Start -Path $using:Path -startLaser ([PSCustomObject]@{ x = $_; y = $using:boardHeight-1; direction = "up" })
-    } -ThrottleLimit 30
+        Test-Start -data $using:data -startLaser ([PSCustomObject]@{ x = $_; y = 0; direction = "down" })
+        Test-Start -data $using:data -startLaser ([PSCustomObject]@{ x = $_; y = $using:boardHeight-1; direction = "up" })
+    } -ThrottleLimit 120
+    #[gc]::Collect()
     ($vert1 + $hozis) | measure -Maximum | select -ExpandProperty Maximum
-
 }
 
 function Test-Start {
-    param ($Path, $startLaser)
-
-    $data = Get-Content $Path
+    param ($data, $startLaser)
 
     #Seed the data with extra metadata
     $board = $data | % {
@@ -124,5 +123,7 @@ function Test-Start {
 }
 
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 51
+[gc]::Collect()
 $result = Solution "$PSScriptRoot\input.txt"
+[gc]::Collect()
 Write-Host "Part 2: $result" -ForegroundColor Magenta
