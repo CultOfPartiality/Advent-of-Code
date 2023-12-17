@@ -5,6 +5,7 @@ param(
 
 New-Item -Path "./$foldername" -ItemType Directory
 New-item -Path "./$foldername/part1.ps1"
+New-item -Path "./$foldername/input.txt"
 New-Item -Path "./$foldername/testcases" -ItemType Directory
 New-Item -Path "./$foldername/testcases/test1.txt"
 
