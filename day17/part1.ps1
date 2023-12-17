@@ -67,6 +67,7 @@ while ($nodesToInvestigate.Count -gt 0) {
 
 }
 ($data|%{$_.cheapestCostHere | %{$_.ToString().PadLeft(2,"0")}|Join-String -Separator ' '})
+
 ($data | % { $_ | % {
 		$test = "$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)"
 		$char = switch ($test) {
@@ -78,6 +79,7 @@ while ($nodesToInvestigate.Count -gt 0) {
 		}
 		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' })
 
+($data|%{$_.cost | %{$_.ToString().PadLeft(1,"0")}|Join-String -Separator ' '})
 
     
 #}
