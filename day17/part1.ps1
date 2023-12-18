@@ -42,8 +42,8 @@ while ($nodesToInvestigate.Count -gt 0) {
 	}
 
 	$neighbours = @(
-		@( ($currentNode.coords.x + 1), $currentNode.coords.y    ),
-		@( ($currentNode.coords.x - 1), $currentNode.coords.y    ),
+		@( ($currentNode.coords.x + 1), $currentNode.coords.y ),
+		@( ($currentNode.coords.x - 1), $currentNode.coords.y ),
 		@(  $currentNode.coords.x, ($currentNode.coords.y + 1) ),
 		@(  $currentNode.coords.x, ($currentNode.coords.y - 1) )
 	).where({ $_ -notcontains -1 }).where({ $_ -notcontains $data.Count })
@@ -67,16 +67,16 @@ while ($nodesToInvestigate.Count -gt 0) {
 
 }
 
-"     Cheapest Cost to Get Here                Points to ComesFrom               Cost per Node"
+"      Cheapest Cost to Get Here               Points to ComesFrom              Cost per Node"
 "--------------------------------------     -------------------------     -------------------------"
 $data|%{
 	($_.cheapestCostHere | %{$_.ToString().PadLeft(2,"0")}|Join-String -Separator ' ')+"     "+
 	($_ | % {
 		$char = switch ("$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)") {
 			'-1,0' { ">" }
-			"1,0" { "<" }
-			"0,1" { "^" }
-			"0,-1" { "v" }
+			'1,0'  { "<" }
+			'0,1'  { "^" }
+			'0,-1' { "v" }
 			default {"."}
 		}
 		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' )+"     "+
@@ -85,16 +85,6 @@ $data|%{
 
 }
 
-# ($data | % { $_ | % {
-# 		$test = "$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)"
-# 		$char = switch ($test) {
-# 			'-1,0' { ">" }
-# 			"1,0" { "<" }
-# 			"0,1" { "^" }
-# 			"0,-1" { "v" }
-# 			default {"."}
-# 		}
-# 		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' })
 
     
 #}
