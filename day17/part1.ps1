@@ -66,20 +66,35 @@ while ($nodesToInvestigate.Count -gt 0) {
 	#($data|%{$_.cheapestCostHere | %{$_.ToString().PadLeft(2,"0")}|Join-String -Separator ' '})
 
 }
-($data|%{$_.cheapestCostHere | %{$_.ToString().PadLeft(2,"0")}|Join-String -Separator ' '})
 
-($data | % { $_ | % {
-		$test = "$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)"
-		$char = switch ($test) {
+"     Cheapest Cost to Get Here                Points to ComesFrom               Cost per Node"
+"--------------------------------------     -------------------------     -------------------------"
+$data|%{
+	($_.cheapestCostHere | %{$_.ToString().PadLeft(2,"0")}|Join-String -Separator ' ')+"     "+
+	($_ | % {
+		$char = switch ("$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)") {
 			'-1,0' { ">" }
 			"1,0" { "<" }
 			"0,1" { "^" }
 			"0,-1" { "v" }
 			default {"."}
 		}
-		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' })
+		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' )+"     "+
+	($_.cost | %{$_.ToString().PadLeft(1,"0")}|Join-String -Separator ' ')
 
-($data|%{$_.cost | %{$_.ToString().PadLeft(1,"0")}|Join-String -Separator ' '})
+
+}
+
+# ($data | % { $_ | % {
+# 		$test = "$($_.coords.x-$_.cameFrom.coords.x),$($_.coords.y-$_.cameFrom.coords.y)"
+# 		$char = switch ($test) {
+# 			'-1,0' { ">" }
+# 			"1,0" { "<" }
+# 			"0,1" { "^" }
+# 			"0,-1" { "v" }
+# 			default {"."}
+# 		}
+# 		$char.ToString().PadLeft(1, "0") } | Join-String -Separator ' ' })
 
     
 #}
