@@ -64,7 +64,7 @@ function Solution {
     #Step 3 - Propegate the pulses, earliest sent first. Count all pulses
     $pulseCount = @(0, 0)
 
-    1..1000 | % {
+    for ($i = 0; $i -lt 1000; $i++) {
         #Initial button press
         $pulseQueue.Enqueue([PSCustomObject]@{
                 type     = $lowPulse
@@ -114,7 +114,7 @@ function Solution {
                 }
             }
         }until ($pulseQueue.Count -eq 0)
-        #Write-Host "Cycle $_ Complete"
+        #Write-Host "Cycle $i Complete"
     }
 
     #return product of pulse counts
