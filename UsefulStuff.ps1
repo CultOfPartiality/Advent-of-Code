@@ -49,3 +49,19 @@ function Get-AllPermutations {
 	}
 	$b
 }
+
+function gcd{ 
+    param ($a,$b)
+    #Euclidean Algorithm
+    while($b -ne 0){
+        $temp = $b
+        $b = $a % $b
+        $a = $temp 
+    }
+    $a
+}
+
+function lcm{
+    param($a,$b)
+    $a * ($b/(gcd $a $b))
+}
