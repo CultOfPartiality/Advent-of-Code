@@ -11,8 +11,8 @@ New-Item -Path "./$foldername/testcases/test1.txt"
 
 
 $template = @'
-. "$PSScriptRoot\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\UsefulStuff.ps1"
+. "$PSScriptRoot\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
 #function Solution {
 #    param ($Path)
@@ -22,7 +22,7 @@ $Path = "$PSScriptRoot/testcases/test1.txt"
 
 $data = get-content $Path
 
-<#WRITE CODE HERE, THEN #>
+<#WRITE CODE HERE, TEST, THEN PUT IN FUNCTION #>
     
 #}
 

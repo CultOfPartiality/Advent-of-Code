@@ -1,5 +1,5 @@
-. "$PSScriptRoot\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\UsefulStuff.ps1"
+. "$PSScriptRoot\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
 
 #All four of the inputs to the conjugator that feeds rx are also conjugators

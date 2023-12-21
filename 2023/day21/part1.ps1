@@ -1,5 +1,5 @@
-. "$PSScriptRoot\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\UsefulStuff.ps1"
+. "$PSScriptRoot\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
 function Solution {
    param ($Path,$TotalSteps)

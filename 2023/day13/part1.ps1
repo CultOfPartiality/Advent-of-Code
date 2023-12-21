@@ -1,4 +1,4 @@
-. "$PSScriptRoot\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\Unit-Test.ps1"
 
 function Find-AllMirrors{
 	param ([string]$Path)
