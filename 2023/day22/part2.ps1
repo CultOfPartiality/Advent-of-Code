@@ -5,14 +5,15 @@
 #    param ($Path)
 
 #The following line is for development
-# $Path = "$PSScriptRoot/testcases/test1.txt"
-# $Path = "$PSScriptRoot/input.txt"
+#$Path = "$PSScriptRoot/testcases/test1.txt"
+ $Path = "$PSScriptRoot/input.txt"
 
 $data = get-content $Path
 
 $blocks = foreach ($line in $data) {
     $start, $end = $line -split '~' | % { , @($_ -split ',') }
     [PSCustomObject]@{
+        raw        = $line
         x1         = [int]$start[0]
         y1         = [int]$start[1]
         z1         = [int]$start[2]
@@ -105,6 +106,18 @@ $clearblocks = foreach ($block in $blocks) {
         $block
     }
 }
+
+### Turn graph into network
+"digraph {`n
+`t rankdir=BT`n"+
+($blocks | % {
+    "`t`"$($_.raw)`" -> {"+
+    ($_.supporting | %{'"'+$_.raw+'"'} | Join-String -Separator " " )+
+    "}`n"
+}) +
+"}" | Out-File "$PSScriptRoot/test.dot"
+dot -Tsvg "$PSScriptRoot/test.dot" | Out-File "$PSScriptRoot/test.svg"
+###
 
 $clearblocks.Count
 
