@@ -8,19 +8,23 @@
 # $volume = 25
 # $Path = "$PSScriptRoot/testcases/test1.txt"
 
-$volume = 27
-$Path = "$PSScriptRoot/testcases/test2.txt"
+# $volume = 27
+# $Path = "$PSScriptRoot/testcases/test2.txt"
 
-# $volume = 150
-# $Path = "$PSScriptRoot/input.txt"
+$volume = 150
+$Path = "$PSScriptRoot/input.txt"
 
-$data = get-content $Path | %{ 
+$rawdata = get-content $Path
+$dups = $rawdata | %{[int32]$_} | Group-Object | where {$_.Count -gt 1} | select -ExpandProperty name
+$data = $rawdata | %{ 
     [PSCustomObject]@{
         value  = [int32] $_
         used   = $false
-    } } | sort -Property value
+        dup    = ([int32] $_ -in $dups)
+    } } | sort -Property value -Descending
 
-$options = 0
+
+$options = @()
 
 ######My plan: get all values -le to the remaining volume to fill
 while ($data.count -gt 1) {
@@ -37,18 +41,38 @@ while ($data.count -gt 1) {
                 $equation+= [string]$element.value + '+'
             }
             if($total -eq $volume){
-                $options++
-                Write-Host $equation.TrimEnd("+")
+                
+                #If a single value of a duplicate was used, add second permutations.
+                #If two unique dupes, add 4
+                #Otherwise, just 1
+                $duplicateOptions = $testArray | where used | where dup | group value | where count -eq 1
+                if($duplicateOptions.Count -gt 0){
+                    Write-Host $equation.TrimEnd("+") " ("($duplicateOptions.Count * 2)" permutations)"
+                }
+                else{
+                    Write-Host $equation.TrimEnd("+")
+                }
+                $options+=[PSCustomObject]@{
+                    equation  = $equation.TrimEnd("+")
+                    dupCount  = $duplicateOptions.Count
+                }
+                
                 break
             }
         }
-        #remove the last 'used' element
-        $testArray = $testArray | select -SkipIndex (($testArray | where used).count-1)
+        #remove the last 'used' element, and reset used 
+        $testArray = $testArray | Where-Object {$_ -ne (($testArray | where used)[-1])} | %{$_.used = $false;$_}
     }
     $data = $data | select -skip 1
 }
 
-Write-Host "Total permutations: $options" -ForegroundColor Magenta
+$uniqueOptions = $options | sort equation | get-Unique -asstring
+$perms = ($uniqueOptions | %{[Math]::Max(($_.dupCount*2),1)} | Measure-Object -Sum).Sum
+
+
+Write-Host "Total permutations: $perms" -ForegroundColor Magenta
+#Not 27
+
 #}
 
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
