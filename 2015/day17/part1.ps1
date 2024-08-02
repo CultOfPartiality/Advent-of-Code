@@ -28,7 +28,7 @@ $options = @()
 
 ######My plan: get all values -le to the remaining volume to fill
 while ($data.count -gt 1) {
-    $testArray = $data
+    $testArray = $data | %{$_.used = $false;$_}
     #Loop over remaining sub array, add elements until reaching the total, then remove the biggest used element and go again
     #If only one used (the start) then we're done with this subarray and can remove the starting element from the main data
     while($testArray.count -gt 0){
@@ -61,17 +61,30 @@ while ($data.count -gt 1) {
             }
         }
         #remove the last 'used' element, and reset used 
-        $testArray = $testArray | Where-Object {$_ -ne (($testArray | where used)[-1])} | %{$_.used = $false;$_}
+        $testArray = $testArray | Where-Object {$_ -ne (($testArray | where used)[-1])}
+        $testArray = $testArray | %{$_.used = $false;$_}
     }
     $data = $data | select -skip 1
 }
 
+#get unique
 $uniqueOptions = $options | sort equation | get-Unique -asstring
-$perms = ($uniqueOptions | %{[Math]::Max(($_.dupCount*2),1)} | Measure-Object -Sum).Sum
+#add extra perms for where 36 included, but not 18
+
+$perms = ($uniqueOptions | %{
+    if( ($_.equation -match "36") -and ($_.equation -notmatch "18")){
+        2*[Math]::Max(($_.dupCount*2),1)
+    }
+    else{
+        [Math]::Max(($_.dupCount*2),1)
+    }
+} | Measure-Object -Sum).Sum
 
 
 Write-Host "Total permutations: $perms" -ForegroundColor Magenta
-#Not 27
+#Not 27, 39, 41
+
+#Missing (at least) 46+36+32+18+18
 
 #}
 
