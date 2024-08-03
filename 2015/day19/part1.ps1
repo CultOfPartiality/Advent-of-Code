@@ -42,6 +42,11 @@ function Solution {
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 4
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 7
 $result = Solution "$PSScriptRoot\input.txt"
-#Not 717, 725, 744, too high
+#717, 725, 744, too high
 Write-Host "Part 1: $result" -ForegroundColor Magenta
 
+
+#####Part 2
+
+#Add medicine to the queue, with count of replacements (0)
+#Dequeue, and for each possible reverse replacement add to queue, adding 1 to count of replacements
