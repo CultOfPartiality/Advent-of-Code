@@ -1,0 +1,4 @@
+inc b
+jio b, -1
+inc b
+jio b, -1

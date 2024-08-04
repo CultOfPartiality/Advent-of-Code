@@ -1,0 +1,7 @@
+inc b
+jmp +3
+inc b
+inc b
+tpl b
+inc b
+hlf b
