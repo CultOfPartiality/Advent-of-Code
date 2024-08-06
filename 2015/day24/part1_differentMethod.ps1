@@ -50,80 +50,39 @@ while($perms.count -eq 0){
     $length++
 	$perms = get-all-groups-x-long $data $thirdOfTotal $length
     write-host "$($perms.count) possible first groups found of length $length... " -NoNewline
-    #check those perms are valid, by generating the next set/s
+	
+	#Sort by QE, and we'll check the best ones first
+	$perms = foreach($perm in $perms){
+		$qe = 1; ($perm | %{ $qe *= $data[$_] })
+		[PSCustomObject]@{
+			perm = $perm
+			values = ($perm | %{ $data[$_]})
+			qe = $qe
+		}
+	}
+	$perms = $perms | sort -Property {$_.qe}
+    
+	#check those perms are valid, by generating the next set/s
     $perms = foreach($perm in $perms){
-        $remainingData = 0..($data.count-1) | ?{$_ -notin $perm} | %{ $data[$_]}
+
+        $remainingData = 0..($data.count-1) | ?{$_ -notin $perm.perm} | %{ $data[$_]}
         $anotherValidPerm = @()
         $anotherValidPermLength = 0
         for($i = 0; $i -lt $remainingData.count; $i++){
             $anotherValidPermLength++
             $anotherValidPerm = get-all-groups-x-long $remainingData $thirdOfTotal $anotherValidPermLength
             if($anotherValidPerm.count -gt 0){
-                ,@($perm)
-                break
+				write-host "Best valid perm found:"
+                $perm
+                exit
             }
         }
+
+
     }
     write-host "$($perms.count) were valid"
 }
 
-#Format and print
-$perms = foreach($perm in $perms){
-    $qe = 1; ($perm | %{ $qe *= $data[$_] })
-    [PSCustomObject]@{
-        perm = $perm
-        values = ($perm | %{ $data[$_]})
-        qe = $qe
-    }
-}
-$perms | sort -Property {$_.qe} | select -First 10
-
-exit
-
-
-#Then work out if the remaining numbers can be split into two groups of the same total
-#Get all unique pairs, where the arrays don't share any numbers (or in this case, indexes), and combine into a single array
-#Then if a potential grouping has no matching numbers in common with an array, it's a viable solution
-
-#function Get-AllPairs from "usefulstuff", but modified
-function arraysDontShareElements{
-	param( $array1, $array2)
-	($array1 | ? {$array2 -contains $_}).count -eq 0
-}
-
-$a = @()+$perms
-$uniqueOtherSets = $perms | % {
-	$current = $_
-	$a = $a | ? { arraysDontShareElements $current $_ }
-	$a | % { , @($current,$_) }
-}
-
-write-host "$($uniqueOtherSets.count) possible other sets found"
-
-$validPerms = foreach($perm in $perms){	
-	$possibleSets = $uniqueOtherSets | %{
-		if(arraysDontShareElements $perm $_){
-			$_
-		}
-	}
-	if($possibleSets.count -gt 0){
-		$qe = 1
-		$perm | %{ $qe *= $data[$_] }
-		$values = $perm | %{ $data[$_]}
-		[PSCustomObject]@{
-			perm = $perm
-			values = $values
-			qe = $qe
-		}
-	}
-}
-
-write-host "$($validPerms.count) possible valid groupings found"
-
-$validPerms = $validPerms | sort -Property {$_.perm.Count},{$_.qe}
-Write-Host "Part 1 - Best Quantum Entanglement of the smallest size group/s: $($validPerms[0].qe)" -ForegroundColor Magenta
-
-$validPerms | select -First 10
 #}
 
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
