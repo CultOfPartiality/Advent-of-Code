@@ -1,0 +1,6 @@
+rect 50x2
+rotate column x=0 by 1
+rotate column x=49 by 1
+rotate row y=0 by 48
+rotate column x=1 by 4
+rect 3x2
