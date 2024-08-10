@@ -17,7 +17,6 @@ $template = @'
 #The following line is for development
 $Path = "$PSScriptRoot/testcases/test1.txt"
 
-
 #function Solution {
 #    param ($Path)
 
@@ -27,10 +26,10 @@ $data = get-content $Path
 <#WRITE CODE HERE, TEST, THEN PUT IN FUNCTION #>
     
 #}
-
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
-#$result = Solution "$PSScriptRoot\input.txt"
-#Write-Host "Part 1: $result" -ForegroundColor Magenta
+#$measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
+#Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+
 '@
 
 Out-File -FilePath "./$foldername/part1.ps1" -InputObject $template
