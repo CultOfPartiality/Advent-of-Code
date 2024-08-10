@@ -3,7 +3,7 @@
 
 #The following line is for development
 $Path = "$PSScriptRoot/testcases/test1.txt"
-# $Path = "$PSScriptRoot/input.txt"
+$Path = "$PSScriptRoot/input.txt"
 
 
 #function Solution {
@@ -11,11 +11,13 @@ $Path = "$PSScriptRoot/testcases/test1.txt"
 
 #Parse instructions
 $data = get-content $Path  | %{
+    $raw = $_
     $op,$arg1,$arg2,$null,$arg3 = $_ -split " "
     switch ($op) {
         "rect" {
             $A,$B = $arg1 -split "x"
             [PSCustomObject]@{
+                Raw = $raw
                 Op = $op
                 A = [int]$A
                 B = [int]$B
@@ -24,6 +26,7 @@ $data = get-content $Path  | %{
         "rotate"{
             if($arg1 -eq "row"){
                 [PSCustomObject]@{
+                    Raw = $raw
                     Op = "rot_row"
                     Row = [int]$arg2.Substring(2)
                     Shift = [int]$arg3
@@ -31,6 +34,7 @@ $data = get-content $Path  | %{
             }
             else{
                 [PSCustomObject]@{
+                    Raw = $raw
                     Op = "rot_col"
                     Col = [int]$arg2.Substring(2)
                     Shift = [int]$arg3
@@ -68,7 +72,7 @@ foreach($inst in $data){
             }
         }
         "rot_row" {
-            $oldRowCellIndexes = ($inst.Row*6)..($inst.Row*6+49)
+            $oldRowCellIndexes = ($inst.Row*50)..($inst.Row*50+49)
             $oldRow = $lcd[$oldRowCellIndexes]
             $oldRowCellIndexes | %{
                 $lcd[$_] = $oldRow[(50 + $_ - $inst.Shift) % 50]
@@ -82,12 +86,17 @@ foreach($inst in $data){
             }
         }
     }
-    Write-Host "Instruction: $($inst.Op)"
+    Write-Host "Instruction: $($inst.Raw)"
     print-display
+    $z = $z
+
 }
 
 $pixelsLit = ($lcd | ?{$_} ).Count 
 Write-Host "Part 1: $pixelsLit pixels lit" -ForegroundColor Magenta
+Write-Host "Part 2: " -ForegroundColor Magenta
+print-display
+
 #Not 85
 
 #}
