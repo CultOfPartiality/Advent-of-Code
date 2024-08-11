@@ -90,4 +90,5 @@ $resultBot = $bots | ?{ $_.chips -contains 61} | ?{ $_.chips -contains 17}
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
 #$measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
 Write-Host "Part 1: Bot $($resultBot.botNum) compares 61 and 17" -ForegroundColor Magenta
+Write-Host "Part 2: Produc of outputs 0, 1, and 2 is $($outputs[0] * $outputs[1] * $outputs[2])" -ForegroundColor Magenta
 
