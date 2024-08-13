@@ -135,18 +135,18 @@ function Solution {
     }
     calc-score -floors $floors
 
-    # $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
-    $searchSpace = New-Object System.Collections.Stack
+    $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
+    # $searchSpace = New-Object System.Collections.Stack
     $previousStates = @{}
     $minSteps = [int32]::MaxValue
-    # $searchSpace.Enqueue($floors, $floors.Score)
-    $searchSpace.Push($floors)
+    $searchSpace.Enqueue($floors, $floors.Score)
+    # $searchSpace.Push($floors)
     $previousStates[(calc-hash $floors)] = $floors.Step
 
     $debug = 0
     while ($searchSpace.Count) {
-        # $floors = $searchSpace.Dequeue()
-        $floors = $searchSpace.Pop()
+        $floors = $searchSpace.Dequeue()
+        # $floors = $searchSpace.Pop()
 
         #We may have already been here in less steps, due to the priority queue, so we'll double check
         $hash = calc-hash $floors
@@ -208,8 +208,8 @@ function Solution {
                             Write-Host "New min steps: $minSteps"
                         }
                         else {
-                            # $searchSpace.Enqueue($newFloors, $newFloors.Score)
-                            $searchSpace.Push($newFloors)
+                            $searchSpace.Enqueue($newFloors, $newFloors.Score)
+                            # $searchSpace.Push($newFloors)
                         
                         }
                     }
