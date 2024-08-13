@@ -19,13 +19,14 @@ function Solution {
 
     function calc-score {
         param($floors)
-        $floors.Score = 6 * $floors[1].Objects.Count + 3 * $floors[2].Objects.Count + 1 * $floors[3].Objects.Count
+        # $floors.Score = 6 * $floors[1].Objects.Count + 3 * $floors[2].Objects.Count + 1 * $floors[3].Objects.Count
+        $floors.Score = 2 * $floors[1].Objects.Count + 2 * $floors[2].Objects.Count + 2 * $floors[3].Objects.Count
     }
     function calc-hash {
         param($floors)
     
         return (
-            "$($floors.Elevator)" +
+            "$($floors.Elevator)_" +
             "1:" + ($floors[1].Objects | sort | join-string ) +
             "2:" + ($floors[2].Objects | sort | join-string ) +
             "3:" + ($floors[3].Objects | sort | join-string ) +
@@ -44,7 +45,18 @@ function Solution {
             Objects = @()
         }
     }
-
+    function Print-Floors {
+        param ($oldFloors, $newFloors)
+        Write-host "New Valid Step:$($newFloors.Step) (current best is $minSteps), Elevator: $($newFloors.Elevator)"
+        4..1 | % {
+            [PSCustomObject]@{
+                Floor    = $_
+                Elevator = $newFloors.Elevator -eq $_ ? "E" : ""
+                From     = $oldFloors[$_].Objects
+                To       = $newFloors[$_].Objects
+            } } | Format-Table | out-string | % { write-host $_ }
+        
+    }
 
     function copy-floors {
         param($floors)
@@ -70,6 +82,42 @@ function Solution {
         if ($unmatchedChips.count -eq 0) { return $true }
         #Otherwise, it's not safe
         return $false
+    }
+
+    function IsValid-Case {
+        param($floors, $prevElevator)
+        
+        #Check floors we've just moved things around on are safe
+        if (-not (IsFloor-Safe $floors[$floors.Elevator])) { return $false }
+        if (-not (IsFloor-Safe $floors[$prevElevator])) { return $false }
+        #Once we've found a upper bound, we can eliminate a number of cases
+        if ($minSteps -lt [int32]::MaxValue) {
+            #Last turn checks
+            $valid = switch ($floors.Step) {
+                #Last step (but last step for a solution better than what we've found so far, which will need to be an odd number to end up on floor 4):
+                #   Elevator needs to be on level 3
+                #   Third floor can't have more than 2 object
+                #   The lower two levels can't have any objects
+                ($minSteps - 3) {
+                    ($floors.Elevator -eq 3) -and
+                    ($floors[3].Objects.Count -le 2) -and
+                    ($floors[2].Objects.Count -eq 0) -and
+                    ($floors[1].Objects.Count -eq 0)
+                }
+                ($minSteps - 2) {
+                    ($floors[1].Objects.Count -eq 0) -and
+                    ($floors[2].Objects.Count + $floors[3].Objects.Count -lt 2)
+                }
+                Default { $true }
+            }
+            if (-not $valid) { return $false }
+        }
+
+        #Other things to check:
+        #Taking a single object to level 4 means we need to just take it back down again...
+        if ($floors.Elevator -eq 4 -and $floors[4].Objects.Count -eq 1) { return $false }
+
+        return $true
     }
 
     foreach ($floorIndex in 1..4) {
@@ -98,24 +146,14 @@ function Solution {
         $floors = $searchSpace.Dequeue()
         # $floors = $searchSpace.Pop()
 
-        #We may have already been here, due to the priority queue, so we'll double check
+        #We may have already been here in less steps, due to the priority queue, so we'll double check
         $hash = calc-hash $floors
-        if ( $previousStates[$hash] -ne $null -and $previousStates[$hash] -lt $floors.Step) {
-            continue
-        }
-        if ( $floors.Step -gt $minSteps) {
-            continue
-        }
+        if ( $previousStates[$hash] -ne $null -and $previousStates[$hash] -lt $floors.Step) {continue}
+        #We also should just discard any steps that have reached the min steps
+        if ( $floors.Step -ge $minSteps) {continue}
 
-        #Make each possible move and queue
-        $currentFloor = $floors[$floors.Elevator]
-        if ($currentFloor.Objects.Count -eq 0) {
-            Write-Error "Error - Floor has no object"
-            exit
-        }
-    
-        #Get all the singles and pairs of objects
-        $perms = (Get-AllPairs (@($currentFloor.Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
+        #Make each possible move and queue (moving singles and pairs)
+        $perms = (Get-AllPairs (@($floors[$floors.Elevator].Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
         foreach ($perm in $perms) {
             #For each, check if we can go up or down without frying. If so, copy object, move elements, increment step and elevator, calc score, and enqueue
             1, -1 | % {
@@ -127,49 +165,34 @@ function Solution {
                     $lowerFloor.objects = @($newFloors[$floors.Elevator].objects | ? { $_ -notin $perm })
                     $upperFloor.objects += $perm
                     $newFloors.Step++
-                    #check floor above is totally safe
-                    #check floor we left will be safe
-                    ##DEBUG
-                    # Write-host "Step:$($newFloors.Step), Elevator: $($newFloors.Elevator), Safe? $(IsFloor-Safe $upperFloor -and IsFloor-Safe $lowerFloor)";1..4 | %{
-                    #     [PSCustomObject]@{
-                    #         Floor = $_
-                    #         From = $floors[$_].Objects
-                    #         To = $newFloors[$_].Objects
-                    # }} | Format-Table
-                    if (IsFloor-Safe $upperFloor -and IsFloor-Safe $lowerFloor) {
+
+                    #Skip it if we've cached the results, otherwise add to cache (valid or not)
+                    $hash = calc-hash $newFloors
+                    if (($null -ne $previousStates[$hash]) -and
+                        ($previousStates[$hash] -le $newFloors.Step) ) { continue }
+                    $previousStates[$hash] = $newFloors.Step
+                    if ($newFloors.Step -ge $minSteps) { continue }
+                    #If it's a valid position we'll think about adding it back to the queue
+                    if ( IsValid-Case -floors $newFloors -prevElevator $floors.Elevator) {
                         calc-score $newFloors
-                        $hash = calc-hash $newFloors
-
+                        #We've checked the step count, so if the score is 0 we've got a new winner, else add it back to the queue
                         if ($newFloors.Score -eq 0) {
-                            if ($newFloors.Step -lt $minSteps) {
-                                $minSteps = $newFloors.Step
-                                Write-Host "New min steps: $minSteps"
-                            }
+                            $minSteps = $newFloors.Step
+                            Write-Host "New min steps: $minSteps"
                         }
-                        elseif ( ($previousStates[$hash] -eq $null -or $previousStates[$hash] -gt $newFloors.Step)) {
-                            $previousStates[$hash] = $newFloors.Step
-                            if ($newFloors.Step -lt $minSteps) {
-
-                            
-                                # Write-host "New Valid Step:$($newFloors.Step), Elevator: $($newFloors.Elevator)"
-                                # 1..4 | %{
-                                #     [PSCustomObject]@{
-                                #         Floor = $_
-                                #         From = $floors[$_].Objects
-                                #         To = $newFloors[$_].Objects
-                                # }} | Format-Table
-                                    
-                                $searchSpace.Enqueue($newFloors, $newFloors.Score)
-                                # $searchSpace.Push($newFloors)
-                            }
+                        else {
+                            #Print-Floors $floors $newFloors
+                            $searchSpace.Enqueue($newFloors, $newFloors.Score)
+                            # $searchSpace.Push($newFloors)
+                        
                         }
                     }
                 }
             }
         }
-        $debug++
+        $debug += ($perms.Count) * 2
         if ($debug % 100 -eq 0) {
-            write-host "$($searchSpace.count) entries in queue, $($previousStates.Count) caches states"
+            write-host "$debug entries checked, $($searchSpace.count) entries in queue, $($previousStates.Count) caches states, best case=$minSteps"
         }
     
     }
