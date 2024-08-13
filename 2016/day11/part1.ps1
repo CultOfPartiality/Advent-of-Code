@@ -96,7 +96,7 @@ function Solution {
                 }
                 ($minSteps - 4) {
                     ($floors[1].Objects.Count -eq 0) -and
-                    ($floors[2].Objects.Count + $floors[3].Objects.Count -lt 2)
+                    (($floors[2].Objects.Count + $floors[3].Objects.Count) -le 2)
                 }
                 Default { $true }
             }
@@ -106,6 +106,12 @@ function Solution {
         #Other things to check:
         #Taking a single object to level 4 means we need to just take it back down again...
         if ($floors.Elevator -eq 4 -and $floors[4].Objects.Count -eq 1) { return $false }
+        #Going up to 3 with a single when level 4 is empty also means going back down
+        if ($floors.Elevator -eq 3 -and $floors[3].Objects.Count -eq 1 -and $floors[4].Objects.Count -eq 0) { return $false }
+        #Going down to 2 with a single when level 1 is empty also means going back up
+        if ($floors.Elevator -eq 2 -and $floors[2].Objects.Count -eq 1 -and $floors[1].Objects.Count -eq 0) { return $false }
+        #Taking a single object to level 1 means we need to just take it back up again...
+        if ($floors.Elevator -eq 1 -and $floors[1].Objects.Count -eq 1) { return $false }
 
         return $true
     }
@@ -151,8 +157,8 @@ function Solution {
         #We may have already been here in less steps, due to the priority queue, so we'll double check
         $hash = calc-hash $floors
         if ( ($null -ne $previousStates[$hash]) -and ($previousStates[$hash] -lt $floors.Step)) { continue }
-        #We also should just discard any steps that have reached the min steps
-        if ( $floors.Step -ge $minSteps) { continue }
+        #We also should just discard any steps are not one less than the next best we could do ($minSteps -2)
+        if ( $floors.Step -ge ($minSteps-3)) { continue }
 
         #Make each possible move and queue (moving singles and pairs)
         $perms = (Get-AllPairs (@($floors[$floors.Elevator].Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
@@ -182,7 +188,7 @@ function Solution {
                     #     $z=$z
                     # }
 
-                    if ($newFloors.Step -ge $minSteps) {
+                    if ($newFloors.Step -gt $minSteps-2) {
                         # Write-host "The following was discarded due to having a higher step count than the minimum finsish seen so far" -ForegroundColor Blue
                         # Print-Floors $floors $newFloors
                         continue
@@ -206,26 +212,26 @@ function Solution {
                         if ($newFloors.Score -eq 0) {
                             
                             #Try rebuilding the queue, with minsteps - steps as the new score
-                            if ($minSteps -eq [int32]::MaxValue) {
-                                Write-host "First result found, rebuilding queue using MinStep - Step"
-                                $tempArray = @()
-                                while ($searchSpace.Count) {
-                                    $tempArray += $searchSpace.Dequeue()
-                                }
-                                $tempArray | % { $searchSpace.Enqueue($_, $minSteps - $_.Step) }
-                            }
+                            # if ($minSteps -eq [int32]::MaxValue) {
+                            #     Write-host "First result found, rebuilding queue using MinStep - Step"
+                            #     $tempArray = @()
+                            #     while ($searchSpace.Count) {
+                            #         $tempArray += $searchSpace.Dequeue()
+                            #     }
+                            #     $tempArray | % { $searchSpace.Enqueue($_, $minSteps - $_.Step) }
+                            # }
 
 
                             $minSteps = $newFloors.Step
                             Write-Host "New min steps: $minSteps"
                         }
                         else {
-                            if ($minSteps -eq [int32]::MaxValue) {
+                            # if ($minSteps -eq [int32]::MaxValue) {
                                 $searchSpace.Enqueue($newFloors, $newFloors.Score)
-                            }
-                            else {
-                                $searchSpace.Enqueue($newFloors, $minSteps - $newFloors.Step)
-                            }
+                            # }
+                            # else {
+                            #     $searchSpace.Enqueue($newFloors, $minSteps - $newFloors.Step)
+                            # }
                             # $searchSpace.Push($newFloors)
                         
                         }
