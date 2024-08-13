@@ -24,16 +24,17 @@ function Solution {
     }
 
     #Idea: If we remove the chemical name, we're just checking for (and eliminating) possible rotations of generators and microchips
-    # Like, if we swap the two microchips, we havn't achieved anything!
+    # Like, if we swap the two microchips, we havn't achieved anything?
+    #           Tried it, didn't work out (wrong answer), but did get us to a smaller answer quicker...
     function calc-hash {
         param($floors)
     
         return (
             "$($floors.Elevator)_" +
-            "_1:" + ($floors[1].Objects | sort | join-string ) +
-            "_2:" + ($floors[2].Objects | sort | join-string ) +
-            "_3:" + ($floors[3].Objects | sort | join-string ) +
-            "_4:" + ($floors[4].Objects | sort | join-string )).GetHashCode()
+            "_1:" + ($floors[1].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
+            "_2:" + ($floors[2].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
+            "_3:" + ($floors[3].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
+            "_4:" + ($floors[4].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string )).GetHashCode()
     
     }
 
