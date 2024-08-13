@@ -150,15 +150,15 @@ function Solution {
 
         #We may have already been here in less steps, due to the priority queue, so we'll double check
         $hash = calc-hash $floors
-        if ( ($null -ne $previousStates[$hash]) -and ($previousStates[$hash] -lt $floors.Step)) {continue}
+        if ( ($null -ne $previousStates[$hash]) -and ($previousStates[$hash] -lt $floors.Step)) { continue }
         #We also should just discard any steps that have reached the min steps
-        if ( $floors.Step -ge $minSteps) {continue}
+        if ( $floors.Step -ge $minSteps) { continue }
 
         #Make each possible move and queue (moving singles and pairs)
         $perms = (Get-AllPairs (@($floors[$floors.Elevator].Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
         foreach ($perm in $perms) {
             #For each, check if we can go up or down without frying. If so, copy object, move elements, increment step and elevator, calc score, and enqueue
-            foreach($ElevatorMovement in (1, -1)){
+            foreach ($ElevatorMovement in (1, -1)) {
                 if ( ($floors.Elevator + $ElevatorMovement) -le 4 -and ($floors.Elevator + $ElevatorMovement) -ge 1) {
                     $newFloors = copy-floors $floors
                     $newFloors.Elevator += $ElevatorMovement
@@ -204,11 +204,28 @@ function Solution {
                         calc-score $newFloors
                         #We've checked the step count, so if the score is 0 we've got a new winner, else add it back to the queue
                         if ($newFloors.Score -eq 0) {
+                            
+                            #Try rebuilding the queue, with minsteps - steps as the new score
+                            if ($minSteps -eq [int32]::MaxValue) {
+                                Write-host "First result found, rebuilding queue using MinStep - Step"
+                                $tempArray = @()
+                                while ($searchSpace.Count) {
+                                    $tempArray += $searchSpace.Dequeue()
+                                }
+                                $tempArray | % { $searchSpace.Enqueue($_, $minSteps - $_.Step) }
+                            }
+
+
                             $minSteps = $newFloors.Step
                             Write-Host "New min steps: $minSteps"
                         }
                         else {
-                            $searchSpace.Enqueue($newFloors, $newFloors.Score)
+                            if ($minSteps -eq [int32]::MaxValue) {
+                                $searchSpace.Enqueue($newFloors, $newFloors.Score)
+                            }
+                            else {
+                                $searchSpace.Enqueue($newFloors, $minSteps - $newFloors.Step)
+                            }
                             # $searchSpace.Push($newFloors)
                         
                         }
