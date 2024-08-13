@@ -19,39 +19,29 @@ function Solution {
 
     function calc-score {
         param($floors)
-        # $floors.Score = 6 * $floors[1].Objects.Count + 3 * $floors[2].Objects.Count + 1 * $floors[3].Objects.Count
-        $floors.Score = 2 * $floors[1].Objects.Count + 2 * $floors[2].Objects.Count + 2 * $floors[3].Objects.Count
+        $floors.Score = 6 * $floors[1].Objects.Count + 3 * $floors[2].Objects.Count + 1 * $floors[3].Objects.Count
+        #$floors.Score = 2 * $floors[1].Objects.Count + 2 * $floors[2].Objects.Count + 2 * $floors[3].Objects.Count
     }
+
     function calc-hash {
         param($floors)
     
         return (
             "$($floors.Elevator)_" +
-            "1:" + ($floors[1].Objects | sort | join-string ) +
-            "2:" + ($floors[2].Objects | sort | join-string ) +
-            "3:" + ($floors[3].Objects | sort | join-string ) +
-            "4:" + ($floors[4].Objects | sort | join-string )).GetHashCode()
+            "_1:" + ($floors[1].Objects | sort | join-string ) +
+            "_2:" + ($floors[2].Objects | sort | join-string ) +
+            "_3:" + ($floors[3].Objects | sort | join-string ) +
+            "_4:" + ($floors[4].Objects | sort | join-string )).GetHashCode()
     
     }
 
-    $floors = @{
-        Elevator = 1
-        Step     = 0
-        Score    = 0
-    }
-    1..4 | % {
-        $floors[$_] = [PSCustomObject]@{
-            Floor   = $_
-            Objects = @()
-        }
-    }
     function Print-Floors {
         param ($oldFloors, $newFloors)
         Write-host "New Valid Step:$($newFloors.Step) (current best is $minSteps), Elevator: $($newFloors.Elevator)"
         4..1 | % {
             [PSCustomObject]@{
                 Floor    = $_
-                Elevator = $newFloors.Elevator -eq $_ ? "E" : ""
+                Elevator = $newFloors.Elevator -eq $_ ? "E" : ($oldFloors.Elevator -eq $_ ? "*":"")
                 From     = $oldFloors[$_].Objects
                 To       = $newFloors[$_].Objects
             } } | Format-Table | out-string | % { write-host $_ }
@@ -104,7 +94,7 @@ function Solution {
                     ($floors[2].Objects.Count -eq 0) -and
                     ($floors[1].Objects.Count -eq 0)
                 }
-                ($minSteps - 2) {
+                ($minSteps - 4) {
                     ($floors[1].Objects.Count -eq 0) -and
                     ($floors[2].Objects.Count + $floors[3].Objects.Count -lt 2)
                 }
@@ -120,6 +110,18 @@ function Solution {
         return $true
     }
 
+
+    $floors = @{
+        Elevator = 1
+        Step     = 0
+        Score    = 0
+    }
+    1..4 | % {
+        $floors[$_] = [PSCustomObject]@{
+            Floor   = $_
+            Objects = @()
+        }
+    }
     foreach ($floorIndex in 1..4) {
         $floorDetails = $setup[$floorIndex - 1]
         $microchips = ($floorDetails | Select-String -AllMatches "(\w*)-compatible microchip").Matches
@@ -133,22 +135,22 @@ function Solution {
     }
     calc-score -floors $floors
 
-    $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
-    # $searchSpace = New-Object System.Collections.Stack
+    # $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
+    $searchSpace = New-Object System.Collections.Stack
     $previousStates = @{}
     $minSteps = [int32]::MaxValue
-    $searchSpace.Enqueue($floors, $floors.Score)
-    # $searchSpace.Push($floors)
+    # $searchSpace.Enqueue($floors, $floors.Score)
+    $searchSpace.Push($floors)
     $previousStates[(calc-hash $floors)] = $floors.Step
 
     $debug = 0
     while ($searchSpace.Count) {
-        $floors = $searchSpace.Dequeue()
-        # $floors = $searchSpace.Pop()
+        # $floors = $searchSpace.Dequeue()
+        $floors = $searchSpace.Pop()
 
         #We may have already been here in less steps, due to the priority queue, so we'll double check
         $hash = calc-hash $floors
-        if ( $previousStates[$hash] -ne $null -and $previousStates[$hash] -lt $floors.Step) {continue}
+        if ( ($null -ne $previousStates[$hash]) -and ($previousStates[$hash] -lt $floors.Step)) {continue}
         #We also should just discard any steps that have reached the min steps
         if ( $floors.Step -ge $minSteps) {continue}
 
@@ -156,22 +158,47 @@ function Solution {
         $perms = (Get-AllPairs (@($floors[$floors.Elevator].Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
         foreach ($perm in $perms) {
             #For each, check if we can go up or down without frying. If so, copy object, move elements, increment step and elevator, calc score, and enqueue
-            1, -1 | % {
-                if ( ($floors.Elevator + $_) -le 4 -and ($floors.Elevator + $_) -ge 1) {
+            foreach($ElevatorMovement in (1, -1)){
+                if ( ($floors.Elevator + $ElevatorMovement) -le 4 -and ($floors.Elevator + $ElevatorMovement) -ge 1) {
                     $newFloors = copy-floors $floors
-                    $newFloors.Elevator += $_
+                    $newFloors.Elevator += $ElevatorMovement
                     $upperFloor = $newFloors[$newFloors.Elevator]
                     $lowerFloor = $newFloors[$floors.Elevator]
                     $lowerFloor.objects = @($newFloors[$floors.Elevator].objects | ? { $_ -notin $perm })
                     $upperFloor.objects += $perm
                     $newFloors.Step++
 
+
+                    #Debug - Check for example state (found steps 1-3, step 4 not found until later on, like step 12....)
+                    # if( $newFloors.Elevator -eq 2 -and
+                    #     $newFloors.Step -eq 3 -and
+                    #     "MC_hydrogen" -in $newFloors[2].Objects -and
+                    #     "MC_lithium" -in $newFloors[1].Objects -and
+                    #     "Gn_hydrogen" -in $newFloors[3].Objects -and
+                    #     "Gn_lithium" -in $newFloors[3].Objects
+                    #     ){
+                    #     Write-host "Found example state!" -ForegroundColor Cyan
+                    #     Print-Floors $floors $newFloors
+                    #     $z=$z
+                    # }
+
+                    if ($newFloors.Step -ge $minSteps) {
+                        # Write-host "The following was discarded due to having a higher step count than the minimum finsish seen so far" -ForegroundColor Blue
+                        # Print-Floors $floors $newFloors
+                        continue
+                    }
+
                     #Skip it if we've cached the results, otherwise add to cache (valid or not)
                     $hash = calc-hash $newFloors
                     if (($null -ne $previousStates[$hash]) -and
-                        ($previousStates[$hash] -le $newFloors.Step) ) { continue }
+                        ($previousStates[$hash] -le $newFloors.Step) ) { 
+                        # Write-host "The following was discarded due to having reached this state previously, with the same or smaller step count ($($previousStates[$hash]))" -ForegroundColor Blue
+                        # Print-Floors $floors $newFloors
+                        continue
+                    }
+
                     $previousStates[$hash] = $newFloors.Step
-                    if ($newFloors.Step -ge $minSteps) { continue }
+                    
                     #If it's a valid position we'll think about adding it back to the queue
                     if ( IsValid-Case -floors $newFloors -prevElevator $floors.Elevator) {
                         calc-score $newFloors
@@ -181,9 +208,8 @@ function Solution {
                             Write-Host "New min steps: $minSteps"
                         }
                         else {
-                            #Print-Floors $floors $newFloors
-                            $searchSpace.Enqueue($newFloors, $newFloors.Score)
-                            # $searchSpace.Push($newFloors)
+                            # $searchSpace.Enqueue($newFloors, $newFloors.Score)
+                            $searchSpace.Push($newFloors)
                         
                         }
                     }
