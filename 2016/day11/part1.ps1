@@ -23,6 +23,8 @@ function Solution {
         #$floors.Score = 2 * $floors[1].Objects.Count + 2 * $floors[2].Objects.Count + 2 * $floors[3].Objects.Count
     }
 
+    #Idea: If we remove the chemical name, we're just checking for (and eliminating) possible rotations of generators and microchips
+    # Like, if we swap the two microchips, we havn't achieved anything!
     function calc-hash {
         param($floors)
     
