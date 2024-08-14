@@ -93,13 +93,13 @@ function Solution {
                 #   The lower two levels can't have any objects
                 ($minSteps - 3) {
                     ($floors.Elevator -eq 3) -and
-                    ($floors[3].Objects.Count -le 2) -and
+                    ($floors[3].Objects.Count -eq 2) -and
                     ($floors[2].Objects.Count -eq 0) -and
                     ($floors[1].Objects.Count -eq 0)
                 }
                 ($minSteps - 4) {
                     ($floors[1].Objects.Count -eq 0) -and
-                    (($floors[2].Objects.Count + $floors[3].Objects.Count) -le 2)
+                    (($floors[2].Objects.Count + $floors[3].Objects.Count) -eq 2)
                 }
                 Default { $true }
             }
@@ -111,8 +111,10 @@ function Solution {
         if ($floors.Elevator -eq 4 -and $floors[4].Objects.Count -eq 1) { return $false }
         #Going up to 3 with a single when level 4 is empty also means going back down
         if ($floors.Elevator -eq 3 -and $floors[3].Objects.Count -eq 1 -and $floors[4].Objects.Count -eq 0) { return $false }
+        if ($floors.Elevator -eq 3 -and $floors[3].Objects.Count -eq 1 -and ($floors[2].Objects.Count+$floors[1].Objects.Count) -eq 0) { return $false }
         #Going down to 2 with a single when level 1 is empty also means going back up
         if ($floors.Elevator -eq 2 -and $floors[2].Objects.Count -eq 1 -and $floors[1].Objects.Count -eq 0) { return $false }
+        if ($floors.Elevator -eq 2 -and $floors[2].Objects.Count -eq 1 -and ($floors[3].Objects.Count+$floors[4].Objects.Count) -eq 0) { return $false }
         #Taking a single object to level 1 means we need to just take it back up again...
         if ($floors.Elevator -eq 1 -and $floors[1].Objects.Count -eq 1) { return $false }
 
@@ -255,5 +257,6 @@ function Solution {
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+#The answer is 33, but we need to optimise more....
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
