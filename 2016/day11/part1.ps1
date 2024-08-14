@@ -26,15 +26,16 @@ function Solution {
     #Idea: If we remove the chemical name, we're just checking for (and eliminating) possible rotations of generators and microchips
     # Like, if we swap the two microchips, we havn't achieved anything?
     #           Tried it, didn't work out (wrong answer), but did get us to a smaller answer quicker...
+    # But if we check validity first, before adding to cache? Gets to 33 much quicker!
     function calc-hash {
         param($floors)
     
         return (
             "$($floors.Elevator)_" +
-            "_1:" + ($floors[1].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
-            "_2:" + ($floors[2].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
-            "_3:" + ($floors[3].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string ) +
-            "_4:" + ($floors[4].Objects | sort <#| %{$_.SubString(0,2)}#> | join-string )).GetHashCode()
+            "_1:" + ($floors[1].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
+            "_2:" + ($floors[2].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
+            "_3:" + ($floors[3].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
+            "_4:" + ($floors[4].Objects | sort | %{$_.SubString(0,2)} | join-string )).GetHashCode()
     
     }
 
@@ -207,11 +208,10 @@ function Solution {
                         # Print-Floors $floors $newFloors
                         continue
                     }
-
-                    $previousStates[$hash] = $newFloors.Step
                     
                     #If it's a valid position we'll think about adding it back to the queue
                     if ( IsValid-Case -floors $newFloors -prevElevator $floors.Elevator) {
+                        $previousStates[$hash] = $newFloors.Step
                         calc-score $newFloors
                         #We've checked the step count, so if the score is 0 we've got a new winner, else add it back to the queue
                         if ($newFloors.Score -eq 0) {
