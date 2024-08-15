@@ -65,3 +65,15 @@ function lcm{
     param($a,$b)
     $a * ($b/(gcd $a $b))
 }
+
+#This keeps cropping up
+function MD5 {
+    param ([string]$in)
+    
+    $stringAsStream = [System.IO.MemoryStream]::new()
+    $writer = [System.IO.StreamWriter]::new($stringAsStream)
+    $writer.write($in);
+    $writer.Flush();
+    $stringAsStream.Position = 0
+    Get-FileHash -InputStream $stringAsStream -Algorithm MD5| Select-Object -ExpandProperty Hash
+}
