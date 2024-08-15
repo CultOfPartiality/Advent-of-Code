@@ -77,6 +77,11 @@ while($searchSpace.Count){
     }    
 }
 
+
+#part 2
+($playfield.LeastSteps -le 50 ).Count
+
+
 #}
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
 #$measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
