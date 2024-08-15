@@ -22,6 +22,11 @@ function Solution {
     $prev1000Hashes = @()
 
     while ($validKeys.Count -ne 64) {
+        
+        if($index % 1000 -eq 0){
+            write-host "$index hashes checked, $($validKeys.Count) keys found so far"
+        }
+
         $inStr = ($salt + $index)
         # 0..2016 | % { $inStr = (MD5 $inStr).ToLower() }
         0..2016 | % { $inStr = ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($inStr))).ToLower().Replace("-","")) }
@@ -46,15 +51,11 @@ function Solution {
         else {
             $prev1000Hashes += $newHash
         }
-        if($index % 1000 -eq 0){
-            write-host "$index hashes checked, $($validKeys.Count) keys found so far"
-        }
-    
     }
     $index - 1000 - 1
     
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 22859
+Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 22551
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
