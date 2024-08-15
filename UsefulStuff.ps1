@@ -67,13 +67,8 @@ function lcm{
 }
 
 #This keeps cropping up
+#This version is a bit faster, and already provides a lowercase version which seems more usefull
 function MD5 {
     param ([string]$in)
-    
-    $stringAsStream = [System.IO.MemoryStream]::new()
-    $writer = [System.IO.StreamWriter]::new($stringAsStream)
-    $writer.write($in);
-    $writer.Flush();
-    $stringAsStream.Position = 0
-    Get-FileHash -InputStream $stringAsStream -Algorithm MD5| Select-Object -ExpandProperty Hash
+    ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($in))).ToLower().Replace("-",""))
 }
