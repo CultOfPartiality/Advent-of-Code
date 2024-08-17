@@ -29,8 +29,8 @@ function Solution {
 
         $inStr = ($salt + $index)
         # 0..2016 | % { $inStr = (MD5 $inStr).ToLower() }
-        0..2016 | % { $inStr = ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($inStr))).ToLower().Replace("-","")) }
-        $newHash = $inStr
+        # 0..2016 | % { $inStr = ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($inStr))).ToLower().Replace("-","")) }
+        $newHash = & "$PSSCriptRoot\..\..\Experiements\MD5\md5-optimisation\a.exe" $inStr 2017
         $index++
     
         if ($prev1000Hashes.Count -eq 1000) {

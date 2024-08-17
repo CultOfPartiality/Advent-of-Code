@@ -2,13 +2,13 @@
 
 Run each implementation 1000 times, just incrementing some index as input
 #>
-$cycles = (1,10,100,1000,2000,10000)
+$cycles = (1,10,100,1000,2000,5000,10000)
+$repeatTests = 5
 $startText = "hello"
 $results = @()
 
 $tests = @()
 
-#Powershell
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 $tests += @{
     Name = "Native PowerShell"
@@ -17,11 +17,16 @@ $tests += @{
         for ($i = 0; $i -lt $testCount; $i++) { $hash = MD5 $hash }
     }
 }
-
 $tests += @{
     Name = "External Python"
     Command = {
         $hash = python "$PSSCriptRoot\native_md5.py" $startText $testCount
+    }
+}
+$tests += @{
+    Name = "C++ (handrolled from GitHub)"
+    Command = {
+        $hash = & "$PSSCriptRoot\md5-optimisation\a.exe" $startText $testCount
     }
 }
 
@@ -30,10 +35,12 @@ foreach($test in $tests){
         Method = $test.Name 
     }
     foreach ($testCount in $cycles) {
-        $time = Measure-Command {
-            & $test.Command
+        $totalTime = 0
+        for ($i = 0; $i -lt $repeatTests; $i++) {   
+            $time = Measure-Command { & $test.Command }
+            $totalTime+=$time.TotalMilliseconds
         }
-        $result[$testCount] = "$($time.TotalMilliseconds)ms"
+        $result[$testCount] = "$($totalTime/$repeatTests)ms"
     }
     $results += [PSCustomObject]$result
 }
