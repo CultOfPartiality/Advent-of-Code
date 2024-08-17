@@ -68,6 +68,8 @@ function lcm{
 
 #This keeps cropping up
 #This version is a bit faster, and already provides a lowercase version which seems more usefull
+$md5 = New-Object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
+$utf8 = New-Object -TypeName System.Text.UTF8Encoding
 function MD5 {
     param ([string]$in)
     ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($in))).ToLower().Replace("-",""))
