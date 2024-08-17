@@ -2,32 +2,40 @@
 
 Run each implementation 1000 times, just incrementing some index as input
 #>
-$testCount = 100
+$cycles = (1,10,100,1000,2000,10000)
+$startText = "hello"
 $results = @()
 
+$tests = @()
 
-$time = Measure-Command {    
-    . "$PSScriptRoot\..\..\UsefulStuff.ps1"
-    for ($i = 0; $i -lt $testCount; $i++) {MD5 "$i"}
-}
-$results += [PSCustomObject]@{
-    Medthod = "Current Powershell"
-    Time = "$($time.TotalMilliseconds)ms" 
-}
-
-$time = Measure-Command {    
-    for ($i = 0; $i -lt $testCount; $i++) {
-        python "$PSSCriptRoot\native_md5.py" "$i"
+#Powershell
+. "$PSScriptRoot\..\..\UsefulStuff.ps1"
+$tests += @{
+    Name = "Native PowerShell"
+    Command = {
+        $hash = $startText
+        for ($i = 0; $i -lt $testCount; $i++) { $hash = MD5 $hash }
     }
 }
-$results += [PSCustomObject]@{
-    Medthod = "External Python"
-    Time = "$($time.TotalMilliseconds)ms" 
+
+$tests += @{
+    Name = "External Python"
+    Command = {
+        $hash = python "$PSSCriptRoot\native_md5.py" $startText $testCount
+    }
 }
 
+foreach($test in $tests){
+    $result = @{
+        Method = $test.Name 
+    }
+    foreach ($testCount in $cycles) {
+        $time = Measure-Command {
+            & $test.Command
+        }
+        $result[$testCount] = "$($time.TotalMilliseconds)ms"
+    }
+    $results += [PSCustomObject]$result
+}
 
-
-
-
-
-$results | format-table | out-string | write-host
+$results | format-table $( @("Method") + ($cycles | %{"$_"}))| out-string | write-host
