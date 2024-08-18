@@ -1,0 +1,2 @@
+abcdefgh
+move position 1 to position 5

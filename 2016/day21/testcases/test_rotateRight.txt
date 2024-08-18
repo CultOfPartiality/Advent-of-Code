@@ -1,0 +1,2 @@
+abcde
+rotate right 2 step
