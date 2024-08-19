@@ -55,9 +55,14 @@ function Solution {
     # We'll also keep track of states seen, in a hash, with the step count. If we've made it to a known state in more steps, then discard
     $minSteps = [int32]::MaxValue
     $cache = @{}
-    function Hash ($gameState) { ( "$($gameState.Data),$($gameState.Empty)" )<#.GetHashCode()#> }
+    function Hash ($gameState) { ( "$($gameState.Data),$($gameState.Empty)" ).GetHashCode() }
+    function Score ($gameState) {
+        $gameState.Data[0] + $gameState.Data[1] + 
+        [Math]::Abs($gameState.Data[0] - $gameState.Empty[0]) + 
+        [Math]::Abs($gameState.Data[1] - $gameState.Empty[1]) 
+    }
     $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
-    $searchSpace.Enqueue($gameState, $gameState.Data[0] + $gameState.Data[1])
+    $searchSpace.Enqueue($gameState, 0)
 
     while ($searchSpace.Count) {
         $gameState = $searchSpace.Dequeue()
@@ -94,7 +99,7 @@ function Solution {
                 }
             }
             else {
-                $searchSpace.Enqueue($newGameState, $newGameState.Data[0] + $newGameState.Data[1])
+                $searchSpace.Enqueue($newGameState, (Score($newGameState)) )
             }
         }
     
