@@ -28,7 +28,7 @@ $Path = "$PSScriptRoot/input.txt"
 				}
 			}
 			"jnz" {
-				$arg2 = [int]$arg2
+				$arg2 = $arg2
 			}
 		}
 		[PSCustomObject]@{
@@ -47,7 +47,7 @@ $Path = "$PSScriptRoot/input.txt"
 				$pointer++
 			}
 			"load" {
-				$registers[$instruction.arg2] = $instruction.arg1
+				$registers[$instruction.arg2] = [int]$instruction.arg1
 				$pointer++
 			}
 			"inc" {
@@ -59,8 +59,8 @@ $Path = "$PSScriptRoot/input.txt"
 				$pointer++
 			}
 			"jnz" {
-                $value = ($instruction.arg1 -in $registerNames) ? $registers[$instruction.arg1] : $instruction.arg1
-                $jump = ($instruction.arg2 -in $registerNames) ? $registers[$instruction.arg2] : $instruction.arg2
+                $value = ($instruction.arg1 -in $registerNames) ? $registers[$instruction.arg1] : [int]$instruction.arg1
+                $jump = ($instruction.arg2 -in $registerNames) ? $registers[$instruction.arg2] : [int]$instruction.arg2
 				$pointer += ($value -ne 0) ? $jump : 1
 			}
             "tgl" {
@@ -85,10 +85,14 @@ $Path = "$PSScriptRoot/input.txt"
                 }
 
             }
-		}//Setup nicer visualisation, so we can work out what is going wrong
-        $inst_Debug = $instructions | Format-Table | Out-String | Write-Host
-        $reg_Debug = $registers | Format-Table  | Out-String | Write-Host
-        $z=1
+		}
+        # $inst_Debug = ($instructions | Format-Table | Out-String) -split "`n"
+        # $reg_Debug = ($registers | Format-Table  | Out-String) -split "`n"
+        # for($i = 0; $i -lt $inst_Debug.Count; $i++){
+		# 	$point = ($i-3) -eq $pointer ? "-->" : "   "
+		# 	Write-Host ($point+$inst_Debug[$i])#+$reg_debug[$i])
+		# }
+		# $z=1
 	}
 	$registers["a"]
 # }
