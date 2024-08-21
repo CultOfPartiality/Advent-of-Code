@@ -83,7 +83,7 @@ foreach ($startingNumber in $numbers) {
 }
 
 write-host "Generating permutations..."
-$perms = Get-AllPermutations (1..($numbers.Count-1)) | %{ ,(@(,0) + $_)}
+$perms = Get-AllPermutations (1..($numbers.Count-1)) | %{ ,(@(,0) + $_ + @(,0))}
 write-host "Generated $($perms.Count) permutations"
 $minSteps = [int32]::MaxValue
 $minSequence = ""
@@ -104,7 +104,7 @@ foreach ($perm in $perms) {
 $minSteps
     
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 14
+# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 14
 $measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
-Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
