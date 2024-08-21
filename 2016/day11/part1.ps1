@@ -244,10 +244,10 @@ function Solution {
                 }
             }
         }
-        $debug += ($perms.Count) * 2
-        if ($debug % 100 -eq 0) {
-            write-host "$debug entries checked, $($searchSpace.count) entries in queue, $($previousStates.Count) caches states, best case=$minSteps"
-        }
+        # $debug += ($perms.Count) * 2
+        # if ($debug % 100 -eq 0) {
+        #     write-host "$debug entries checked, $($searchSpace.count) entries in queue, $($previousStates.Count) caches states, best case=$minSteps"
+        # }
     
     }
 
@@ -255,7 +255,8 @@ function Solution {
 
 
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11
+$measuredTime = measure-command { Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11}
+Write-Host "Test 1`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Green
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 #The answer is 33, but we need to optimise more....
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta

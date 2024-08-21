@@ -157,8 +157,8 @@ function Solution {
 }
 # $measuredTime = measure-command { Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11 }
 # Write-Host "Test 1`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Green
-$measuredTime = measure-command { Unit-Test  ${function:Solution} "$PSScriptRoot/input.txt" 33 }
-Write-Host "Part 1`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Green
+$measuredTime = measure-command { Unit-Test  ${function:Solution} "$PSScriptRoot/input.txt" 57 }
+Write-Host "Part 2`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Green
 
 # $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 # #The answer is 33, but we need to optimise more, especially for part 2

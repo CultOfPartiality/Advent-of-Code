@@ -10,17 +10,9 @@ function Solution {
 
     $setup = get-content $Path
 
-    <#Rules
- - Chips can only be on the same floor as RTGs if their matching RTG is on the same floor
- - Elevator can carry two objects
- - Elevator must have at least one object to move between floors
- - Get all objects to top floor
-#>
-
     function calc-score {
         param($floors)
         $floors.Score = 6 * $floors[1].Objects.Count + 3 * $floors[2].Objects.Count + 1 * $floors[3].Objects.Count
-        #$floors.Score = 2 * $floors[1].Objects.Count + 2 * $floors[2].Objects.Count + 2 * $floors[3].Objects.Count
     }
 
     #Idea: If we remove the chemical name, we're just checking for (and eliminating) possible rotations of generators and microchips
@@ -31,11 +23,11 @@ function Solution {
         param($floors)
     
         return (
-            "$($floors.Elevator)_" +
-            "_1:" + ($floors[1].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
-            "_2:" + ($floors[2].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
-            "_3:" + ($floors[3].Objects | sort | %{$_.SubString(0,2)} | join-string ) +
-            "_4:" + ($floors[4].Objects | sort | %{$_.SubString(0,2)} | join-string )).GetHashCode()
+            "$($floors.Elevator)," +
+            ($floors[1].Objects | sort | %{$_.SubString(0,2)} | join-string ) + "," +
+            ($floors[2].Objects | sort | %{$_.SubString(0,2)} | join-string ) + "," +
+            ($floors[3].Objects | sort | %{$_.SubString(0,2)} | join-string ) + "," +
+            ($floors[4].Objects | sort | %{$_.SubString(0,2)} | join-string )  ).GetHashCode()
     
     }
 
@@ -165,7 +157,7 @@ function Solution {
         $hash = calc-hash $floors
         if ( ($null -ne $previousStates[$hash]) -and ($previousStates[$hash] -lt $floors.Step)) { continue }
         #We also should just discard any steps are not one less than the next best we could do ($minSteps -2)
-        if ( $floors.Step -ge ($minSteps-3)) { continue }
+        if ( $floors.Step+1 -ge ($minSteps-2)) { continue }
 
         #Make each possible move and queue (moving singles and pairs)
         $perms = (Get-AllPairs (@($floors[$floors.Elevator].Objects) + @("0")))  | % { , ($_ | ? { $_ -ne "0" }) }
@@ -180,20 +172,6 @@ function Solution {
                     $lowerFloor.objects = @($newFloors[$floors.Elevator].objects | ? { $_ -notin $perm })
                     $upperFloor.objects += $perm
                     $newFloors.Step++
-
-
-                    #Debug - Check for example state (found steps 1-3, step 4 not found until later on, like step 12....)
-                    # if( $newFloors.Elevator -eq 2 -and
-                    #     $newFloors.Step -eq 3 -and
-                    #     "MC_hydrogen" -in $newFloors[2].Objects -and
-                    #     "MC_lithium" -in $newFloors[1].Objects -and
-                    #     "Gn_hydrogen" -in $newFloors[3].Objects -and
-                    #     "Gn_lithium" -in $newFloors[3].Objects
-                    #     ){
-                    #     Write-host "Found example state!" -ForegroundColor Cyan
-                    #     Print-Floors $floors $newFloors
-                    #     $z=$z
-                    # }
 
                     if ($newFloors.Step -gt $minSteps-2) {
                         # Write-host "The following was discarded due to having a higher step count than the minimum finsish seen so far" -ForegroundColor Blue
@@ -258,6 +236,7 @@ function Solution {
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input_part2.txt" }
-#The answer is 33, but we need to optimise more....
+#Not 61.....
+#Other code has turned up 57 as the correct asnwer. This code... doesn't work?
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
