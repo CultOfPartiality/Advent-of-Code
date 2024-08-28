@@ -65,6 +65,14 @@ function lcm{
     param($a,$b)
     $a * ($b/(gcd $a $b))
 }
+function lcm_array{
+    param($array)
+	$lcm = 1
+	foreach($el in $array){
+    	$lcm = lcm $lcm $el
+	}
+	$lcm
+}
 
 #This keeps cropping up
 #This version is a bit faster, and already provides a lowercase version which seems more usefull
