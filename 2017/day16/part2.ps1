@@ -5,8 +5,8 @@
 $Path = "$PSScriptRoot/testcases/test1.txt"
 $Path = "$PSScriptRoot/input.txt"
 
-# function Solution {
-# 	param ($Path)
+function Solution {
+	param ($Path)
 
 	# Parse instructions
 	$instructions = (get-content $Path) -split "," | % {
@@ -36,51 +36,56 @@ $Path = "$PSScriptRoot/input.txt"
 	}
 
 	# Setup dance
-	$startingOrder = 'a'..'p'
 	$order = 'a'..'p'
+	$prevOrder = @{}
+	$prevOrder[$order -join ""] = 0
 
-	# Loop over instructions once, which gets us the transform to apply to each string
-	foreach ($instruction in $instructions) {
-		switch ($instruction.op) {
-			's' {
-				if ($instruction.arg1 -notin (0, $order.Count)) {
-					$index = $order.count - $instruction.arg1
-					$order = $order[$index..($order.Count - 1)] + $order[0..($index - 1)]
+	function Run-Ops ($order) {
+		foreach ($instruction in $instructions) {
+			switch ($instruction.op) {
+				's' {
+					if ($instruction.arg1 -notin (0, $order.Count)) {
+						$index = $order.count - $instruction.arg1
+						$order = $order[$index..($order.Count - 1)] + $order[0..($index - 1)]
+					}
+				}
+				'x' {
+					$order[$instruction.arg2], $order[$instruction.arg1] = $order[$instruction.arg1], $order[$instruction.arg2]
+				}
+				'p' {
+					$index1 = $order.IndexOf($instruction.arg1)
+					$index2 = $order.IndexOf($instruction.arg2)
+					$order[$index1], $order[$index2] = $order[$index2], $order[$index1]
 				}
 			}
-			'x' {
-				$temp = $order[$instruction.arg1]
-				$order[$instruction.arg1] = $order[$instruction.arg2]
-				$order[$instruction.arg2] = $temp
-			}
-			'p' {
-				$index1 = $order.IndexOf($instruction.arg1)
-				$index2 = $order.IndexOf($instruction.arg2)
-				$temp = $order[$index1]
-				$order[$index1] = $order[$index2]
-				$order[$index2] = $temp
-			}
 		}
+		$order
 	}
 
-	# Now starting from the start order, work out the new indexes that one round does
-	# The array is (in order) the index of the previous round that should go there
-	write-host "Initial: " ('a'..'p' -join '')
-	write-host "Round 1: " ($order -join "")
-	$prevIndexes = $order | %{
-		$startingOrder.IndexOf($_)
+	# Loop over instructions in rounds until we find a repeat
+	for ($i = 0; $i -lt 1000000000; $i++) {
+		$order = Run-Ops($order)
+		if ($prevOrder.ContainsKey($order -join "")) {
+			#We've found a loop
+			$i++
+			break
+		}
+		$prevOrder[$order -join ""] = $i
 	}
-	$testOrder = $prevIndexes | %{ $startingOrder[$_]}
-	write-host "Test sp: " ($testOrder -join "")
-	
-	# Still, running 1 billion rounds is too slow. So we need to work out the isolated loops
-	# and just rotate them with modulus maths. Say if 1->5->2->1, then that's a loop of 3.
-	# 1 billion % 3 = 1, so we just apply one round of that transform
-	
+
+	$loopCount = $i - $prevOrder[$order -join ""]
+	$extraPerms = 1000000000 % $loopCount
+	write-host "The ops loop after $loopCount iterations, so running that many ops is the same as doing nothing"
+	write-host "Thus, 1000000000 % $loopCount is $extraPerms extra rounds to get there after the last rounds"
+	for ($i = 0; $i -lt $extraPerms; $i++) {
+		$order = Run-Ops($order)
+	}
+
+	write-host "Initial: " ('a'..'p' -join '')
+	write-host "Final  : " ($order -join '')
 	$order -join ""
-    
-# }
-# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" "paedcbfghijklmno"
-# $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-# Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+
+}
+$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 

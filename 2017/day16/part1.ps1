@@ -47,18 +47,13 @@ function Solution {
 				}
 			}
 			'x' {
-				$temp = $order[$instruction.arg1]
-				$order[$instruction.arg1] = $order[$instruction.arg2]
-				$order[$instruction.arg2] = $temp
+				$order[$instruction.arg2], $order[$instruction.arg1] = $order[$instruction.arg1],$order[$instruction.arg2]
 			}
 			'p' {
 				$index1 = $order.IndexOf($instruction.arg1)
 				$index2 = $order.IndexOf($instruction.arg2)
-				$temp = $order[$index1]
-				$order[$index1] = $order[$index2]
-				$order[$index2] = $temp
+				$order[$index1],$order[$index2] = $order[$index2],$order[$index1]
 			}
-			Default {}
 		}
 	}
 	$order -join ""
