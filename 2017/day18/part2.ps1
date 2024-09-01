@@ -45,11 +45,15 @@ function Solution {
 			"add" { $program.reg[$inst.X] += $Y }
 			"mul" { $program.reg[$inst.X] *= $Y }
 			"mod" { $program.reg[$inst.X] %= $Y }
-			"jgz" { $program.ptr = ($program.reg[$inst.X] -gt 0) ? $program.ptr - 1 + $Y  : $program.ptr }# decrement by one, as we always add one to the pointer
+			"jgz" { 
+				$X = $program.reg.ContainsKey($inst.X) ? $program.reg[$inst.X] : [int]$inst.X
+				$program.ptr = ($X -gt 0) ? $program.ptr - 1 + $Y  : $program.ptr # decrement by one, as we always add one to the pointer
+			}
 
 			"snd" {
+				$X = $program.reg.ContainsKey($inst.X) ? $program.reg[$inst.X] : [int]$inst.X
 				$program.sendCount++
-				$null = $programs[$index -bxor 1].queue.add($program.reg[$inst.X])
+				$null = $programs[$index -bxor 1].queue.add($X)
 			}
 
 			'rcv' {
