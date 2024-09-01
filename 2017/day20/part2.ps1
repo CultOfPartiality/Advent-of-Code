@@ -35,6 +35,11 @@ function Calc-Distance {
 	param($p1, $p2)
 	0..2 | % { [math]::abs($p1[$_] - $p2[$_]) } | measure -sum | select -ExpandProperty Sum
 }
+function Is-Accelerating($particle){
+	[math]::sign($particle.vel[0]) -eq [math]::sign($particle.acc[0]) -and
+	[math]::sign($particle.vel[1]) -eq [math]::sign($particle.acc[1]) -and
+	[math]::sign($particle.vel[2]) -eq [math]::sign($particle.acc[2])
+}
 
 # One round of simulation to get "prev positions"
 $particles | % { Sim-Particle($_) }
@@ -49,14 +54,24 @@ while ($true) {
 	# Further more, some are still "travelling towards each other" but actually won't collide. We need to work this out, so we can only do a single cross join
 	# We also need to not do a full crossjoin, but a reducing one....
 	$anyTravellingTowardEachother = $false
-	foreach ($particle in $particles) {
-
-		foreach($otherParticle in $particles){
+	for ($i = 0; $i -lt ($particles.Count-1); $i++) {
+		$particle = $particles[$i]
+		for ($j = $i+1; $j -lt $particles.Count; $j++) {
+			$otherParticle = $particles[$j]
+			# If both have stopped deccelerating, then check that one at least on axis isn't the same and isn't getting closer
+			if( Is-Accelerating($particle) -and Is-Accelerating($otherParticle)){
+				$deltaDist = 0..2 | %{ [math]::abs($particle.pos[$_]-$otherParticle.pos[$_]) - [math]::abs($particle.prevPos[$_]-$otherParticle.prevPos[$_]) }
+				if($deltaDist -ge 0){
+					#one axis isn't getting close, continue
+					continue
+				}
+			}
+			# Else, just check the overall distance
 			$deltaDistance = (Calc-Distance $particle.pos $otherParticle.pos) - (Calc-Distance $particle.prevPos $otherParticle.prevPos)
 			if($deltaDistance -lt 0){
 				$particle.countOfClosingParticles = 1
 				$otherParticle.countOfClosingParticles = 1
-				write-host "Particle $($particle.num) and $($otherparticle.num) are getting closer" -ForegroundColor DarkGray
+				write-host "Particle $($particle.num) and $($otherparticle.num) are getting closer. DeltaDist: $($deltaDist -join ", ")" -ForegroundColor DarkGray
 				break
 			}
 		}
