@@ -18,21 +18,34 @@ function Solution {
 		x   = $startIndex
 		y   = $startIndex
 	}
+	enum State {
+		Cleaned
+		Weakened
+		Infected
+		Flagged
+	}
+
 	$map = @{}
 	for ($y = 0; $y -lt $data.Count; $y++) {
 		for ($x = 0; $x -lt $data.Count; $x++) {
-			$map["$x,$y"] = $data[$y][$x] -eq "#"
+			$map["$x,$y"] = $data[$y][$x] -eq "#" ? [State]::Infected : [State]::Cleaned
 		}
 	}
 
 	$infections = 0
-	for ($i = 0; $i -lt 10000; $i++) {
-		$nodeState = $map["$($virus.x),$($virus.y)"] ?? $false
+	for ($i = 0; $i -lt 10000000; $i++) {
+		$nodeState = $map["$($virus.x),$($virus.y)"] ?? [State]::Cleaned
 		# Step 1: Change direction
-		$virus.dir = ($virus.dir + ($nodeState ? 1 : -1) + 4) % 4
-		# Step 2: Flip node state (and count new infections)
-		$infections += $nodeState ? 0 : 1
-		$map["$($virus.x),$($virus.y)"] = -not $nodeState
+		# Step 2: Change node state (and count new infections)
+		switch ($nodeState) {
+		([state]::Cleaned) { $nodeState++; $virus.dir -= 1 }
+		([state]::Weakened) { $nodeState++; $infections++ }
+		([state]::Infected) { $nodeState++; $virus.dir += 1 }
+		([state]::Flagged) { $nodeState = [state]::Cleaned; $virus.dir += 2 }
+			Default { write-host "Error"; exit }
+		}
+		$virus.dir = ($virus.dir + 4) % 4
+		$map["$($virus.x),$($virus.y)"] = $nodeState
 		# Step 3: Move virus
 		switch ($virus.dir) {
 			0 { $virus.y-- }
@@ -44,7 +57,7 @@ function Solution {
 	$infections
 
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 5587
+Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 2511944
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
