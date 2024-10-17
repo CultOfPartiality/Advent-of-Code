@@ -1,0 +1,7 @@
+"Glue" pieces (e.g. 23/23)
+23
+28
+30 - Only one possibility for each end
+34 - Only one possibility for each end
+43
+45 - Only one possibility for each end
