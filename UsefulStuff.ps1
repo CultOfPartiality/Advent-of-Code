@@ -82,3 +82,19 @@ function MD5 {
     param ([string]$in)
     ([System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($in))).ToLower().Replace("-",""))
 }
+
+#Shorthand, use parethesis!
+#Works for +ve numbers
+function isPrime($num){
+	$num = [System.Math]::abs($num)
+	if($num -eq 1){ return $false}
+	if($num -eq 2){ return $true}
+	$prime = $true
+	2..([int][Math]::Sqrt($num)) | %{
+		if( ($num % $_) -eq 0){
+			$prime = $false
+			return
+		}
+	}
+	return $prime
+}
