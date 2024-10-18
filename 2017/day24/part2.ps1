@@ -16,7 +16,8 @@ function Solution {
     }
 
     $solutions = 0
-    $strongestBridge = 0
+    $LongestBridge = 0
+    $StrongestBridge = 0
     $searchSpace = New-Object 'System.Collections.Queue'
 
     # First round - Find each element with a 0, and add to queue
@@ -34,16 +35,20 @@ function Solution {
     while ($searchSpace.Count) {
         $debugCounter++
         if($debugCounter % 10000 -eq 0){
-            Write-Host "$debugCounter steps, $($searchSpace.Count) options in the queue, $($Solutions) completed bridges found (best: $strongestBridge)"
+            Write-Host "$debugCounter steps, $($searchSpace.Count) options in the queue, $($Solutions) completed bridges found (longest: $LongestBridge, strength: $StrongestBridge)"
         }
 
         $state = $searchSpace.Dequeue()
         $remainingPieces = $allPieces | ? { $_.values -contains $state.NextJoin } | ? { $_.index -notin $state.Pieces.index }
         if (-not $remainingPieces.count) {
             $solutions++
-            $value = $state.Pieces.values | measure -Sum | Select -ExpandProperty Sum
-            if($value -gt $strongestBridge){
-                $strongestBridge = $value
+            $strength = $state.Pieces.values | measure -Sum | Select -ExpandProperty Sum
+            if( ($state.Pieces.Count -eq $longestBridge) -and ($strength -gt $StrongestBridge)){
+                $StrongestBridge = $strength
+            }
+            elseif($state.Pieces.Count -gt $longestBridge){
+                $longestBridge = $state.Pieces.count
+                $StrongestBridge = $strength
             }
             continue
         }
@@ -62,7 +67,7 @@ function Solution {
 
 }
 
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 31
+Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 19
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
