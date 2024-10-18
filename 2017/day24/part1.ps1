@@ -15,7 +15,8 @@ function Solution {
         }
     }
 
-    $solutions = @()
+    $solutions = 0
+    $bestSolution = 0
     $searchSpace = New-Object 'System.Collections.Queue'
 
     # First round - Find each element with a 0, and add to queue
@@ -29,11 +30,21 @@ function Solution {
     }
 
     # Then run until queue is empty, generating the next steps and adding those to the queue. If there is no next step, this is a solution
+    $debugCounter=0
     while ($searchSpace.Count) {
+        $debugCounter++
+        if($debugCounter % 10000 -eq 0){
+            Write-Host "$debugCounter steps, $($searchSpace.Count) options in the queue, $($Solutions) completed bridges found (best: $bestSolution)"
+        }
+
         $state = $searchSpace.Dequeue()
-        $remainingPieces = $allPieces | ? { $_.index -notin $state.Pieces.index } | ? { $_.values -contains $state.NextJoin }
+        $remainingPieces = $allPieces | ? { $_.values -contains $state.NextJoin } | ? { $_.index -notin $state.Pieces.index }
         if (-not $remainingPieces.count) {
-            $solutions += $state
+            $solutions++
+            $value = $state.Pieces.values | measure -Sum | Select -ExpandProperty Sum
+            if($value -gt $bestSolution){
+                $bestSolution = $value
+            }
             continue
         }
         foreach ($piece in $remainingPieces) {
@@ -46,8 +57,8 @@ function Solution {
         }
     }
 
-    $solutions | %{$_.Pieces.values|measure -Sum } | measure -Property Sum -Maximum | select -ExpandProperty Maximum
-
+    #$solutions | %{$_.Pieces.values|measure -Sum } | measure -Property Sum -Maximum | select -ExpandProperty Maximum
+    $bestSolution
 
 }
 
