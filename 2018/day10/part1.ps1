@@ -17,8 +17,8 @@ class Point {
         $this.velocity = $velString -split "," | % { [int]$_ }
     }
 
-    [void]Sim() {
-        0..1 | % { $this.coords[$_] += $this.velocity[$_] }
+    [void]Sim($iterations) {
+        0..1 | % { $this.coords[$_] += $iterations * $this.velocity[$_] }
     }
 
     [void]UnSim() {
@@ -54,18 +54,30 @@ $points = get-content $Path | % {
 }
 
 $ySpreadPrev = [int32]::MaxValue
+$xSpreadPrev = [int32]::MaxValue
 $time = 0
+
+foreach ($point in $points) {
+    $point.Sim(6000)
+}
+
 do {
     foreach ($point in $points) {
-        $point.Sim()
+        $point.Sim(1)
     }
     $xStats = $points | %{$_.coords[0]} | measure -Maximum -Minimum
     $yStats = $points | %{$_.coords[1]} | measure -Maximum -Minimum
     $time++
-    $deltaYSpread = [math]::abs( ($yStats.Maximum-$yStats.Minimum) - $ySpreadPrev)
-    $shrinking = ($yStats.Maximum-$yStats.Minimum) -lt $ySpreadPrev
-    $ySpreadPrev = ($yStats.Maximum-$yStats.Minimum)
-    # write-host "Time $time, ΔySpread = $deltaYSpread"
+    $ySpread = ($yStats.Maximum-$yStats.Minimum)
+    $xSpread = ($xStats.Maximum-$xStats.Minimum)
+    $deltaYSpread = [math]::abs( $ySpread - $ySpreadPrev)
+    $deltaXSpread = [math]::abs( $xSpread - $xSpreadPrev)
+    $shrinking = $ySpread -lt $ySpreadPrev -and $xSpread -lt $xSpreadPrev
+    $ySpreadPrev = $ySpread
+    $xSpreadPrev = $xSpread
+    if($time%100-eq 0 -or -not $shrinking){
+        write-host "Time $time, ySpread: $ySpread, ΔySpread: $deltaYSpread, xSpread: $xSpread, ΔxSpread = $deltaXSpread"
+    }
     # print-points($points)
     # $z=$z
 }while ($shrinking)
