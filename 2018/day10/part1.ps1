@@ -32,17 +32,15 @@ function print-points($points){
     $yStats = $points | %{$_.coords[1]} | measure -Maximum -Minimum
     $yCount = $yStats.Maximum-$yStats.Minimum +1
 
-    $orderedPoints = $points | sort {$_.coords[1]} 
-
     $area = new-object "bool[,]" $xCount,$yCount
     foreach($point in $points){
-        $area[$point.coords] = $true
+        $area[ ($point.coords[0]-$xStats.Minimum),($point.coords[1]-$yStats.Minimum)] = $true
     }
 
     for ($y = $yStats.Minimum; $y -le $yStats.Maximum; $y++) {
         $row = ""
         for ($x = $xStats.Minimum; $x -le $xStats.Maximum; $x++) {
-            $row += $area[$x,$y] ? "#" : "."
+            $row += $area[($x-$xStats.Minimum),($y-$yStats.Minimum)] ? "#" : "."
         }
         write-host $row
     }
@@ -57,9 +55,11 @@ $ySpreadPrev = [int32]::MaxValue
 $xSpreadPrev = [int32]::MaxValue
 $time = 0
 
+# Should have newton's method'd here, but just brute forced it... :(
 foreach ($point in $points) {
-    $point.Sim(6000)
+    $point.Sim(10500)
 }
+$time+=10500
 
 do {
     foreach ($point in $points) {
@@ -85,7 +85,10 @@ do {
 foreach ($point in $points) {
     $point.UnSim()
 }
+$time--
+
 print-points($points)
+write-host "Took $($time)s for stars to align"
 
 
 
