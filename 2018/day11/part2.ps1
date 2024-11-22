@@ -25,6 +25,15 @@ function Solution {
         }
     }
 
+    #Debug
+    for ($y = 1; $y -lt 11; $y++) {
+        $row = ""
+        for ($x = 1; $x -lt 11; $x++) {
+            $row += ([string]$grid[$x, $y]).PadLeft(2," ") + ","
+        }
+        write-host ($row.TrimEnd(","))
+    }
+    
     $bestPower = 0
     $bestPowerCoords = @()
     $bestGroupSize = 0
