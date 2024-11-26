@@ -52,6 +52,7 @@ function Solution {
                     $bestPower = $power
                     $bestPowerCoords = $x, $y
                     $bestGroupSize = $groupsize
+                    write-host (($bestPowerCoords | % { [string]$_ } | Join-String -Separator ",") + ","+[string]$groupsize)
                 }
             }
         }
@@ -60,8 +61,8 @@ function Solution {
     
 
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" "90,269,16"
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test3.txt" "232,251,12"
+# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" "90,269,16"
+# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test3.txt" "232,251,12"
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
