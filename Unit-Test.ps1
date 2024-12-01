@@ -1,7 +1,8 @@
 <#
 Use like:
 
-    test ${function:Total-Numbers} '[1,2,3]' 6
+    Unit-Test ${function:Total-Numbers} '[1,2,3]' 6
+    Unit-Test ${function:Solution} @{ Num1=1234; Num2=2345 } 22
 
 Function might best look like:
 
