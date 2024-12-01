@@ -1,30 +1,30 @@
 . "$PSScriptRoot\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
-
 function Solution {
 	param ($Path)
 
-	$list1 = @()
-	$list2 = @()
-
-	$data = get-content $Path | % {
+	# Parse the two lists into sorted arrays
+	$list1 = New-Object System.Collections.ArrayList
+	$list2 = New-Object System.Collections.ArrayList
+	get-content $Path | % {
 		$a, $b = $_ -split "   "
-		$list1 += [int]$a
-		$list2 += [int]$b
+		[void]$list1.Add([int]$a)
+		[void]$list2.Add([int]$b)
 	}
+	$list1.Sort()
+	$list2.Sort()
 
-	$list1 = $list1 | sort
-	$list2 = $list2 | sort
-
+	# Multiply each entry with the number of times it occured in the second list, and add to the total
 	$total = 0
 	for ($i = 0; $i -lt $list1.Count; $i++) {
-		# This could be optimised
-		$total += $list1[$i] * ($list2 | ?{$_ -eq $list1[$i]}).Count
+		# Using array lists was a ~20x improvement, and checking is was contained before looping over the list saved an extra little bit
+		if($list2.Contains($list1[$i])){
+			$total += $list1[$i] * ($list2 -eq $list1[$i]).Count
+		}
 	}
 
+	# Output the solved total
 	$total
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 31
