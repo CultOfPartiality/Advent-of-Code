@@ -14,15 +14,16 @@ Function might best look like:
 function Unit-Test {
     param ([scriptblock]$function,$inputData,$expectedAnswer)
     write-host "Example '$inputData': " -NoNewline -ForegroundColor Yellow
-    $answer = $function.InvokeReturnAsIs($inputData)
+    $measuredTime = measure-command {
+        $answer = $function.InvokeReturnAsIs($inputData)
+    }
     if($answer -eq $expectedAnswer){
-        write-host "Example passed ✔ " -ForegroundColor Green
+        write-host "Example passed ✔ ($($measuredTime.TotalSeconds)s)" -ForegroundColor Green
         #Return $true
     }
     else{
         write-host "Example failed ✖  | " -NoNewline -ForegroundColor Red
-        Write-host "Expected '$expectedAnswer', produced '$answer'" -ForegroundColor Red
+        Write-host "Expected '$expectedAnswer', produced '$answer' ($($measuredTime.TotalSeconds)s)" -ForegroundColor Red
         exit 
     }   
 }
-
