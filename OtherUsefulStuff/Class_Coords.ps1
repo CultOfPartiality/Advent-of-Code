@@ -21,6 +21,11 @@ class Coords {
         return [Coords]::new( ($first.row + $second.row), ($first.col + $second.col) )
     }
 
+    # Allow addition of an array
+    static [Coords] op_Addition ([Coords]$first, [Array]$second) {
+        return [Coords]::new( ($first.row + $second[0]), ($first.col + $second[1]) )
+    }
+
     static [Coords] op_Subtraction ([Coords]$first, [Coords]$second) {
         return [Coords]::new( ($first.row - $second.row), ($first.col - $second.col) )
     }
@@ -33,6 +38,31 @@ class Coords {
     #A string to use as a hash value, in the form "row,col"
     [string] Hash() {
         return "$($this.row),$($this.col)"
+    }
+
+    #Return as an array, for using and a 2D array index
+    [array] Array() {
+        return @($this.row,$this.col)
+    }
+
+    #Check if a coord is with a rectangle, starting from 0,0
+    [bool]Contained($rowCount,$colCount){
+        return (
+            $this.row -ge 0 -and
+            $this.row -lt $rowCount -and
+            $this.col -ge 0 -and
+            $this.col -lt $colCount
+        )
+    }
+
+    # Return orthogonal neighbours in "reading order" (top to bottom, then left to right)
+    [array] OrthNeighbours() {
+        return (
+            ($this+(-1,0)),
+            ($this+(0,-1)),
+            ($this+(0,1)),
+            ($this+(1,0))
+        )
     }
 
 }
