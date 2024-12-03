@@ -30,14 +30,16 @@ for ($y = 0; $y -lt $rows; $y++) {
         if($cell -ne "#"){
             $mapTile = [PSCustomObject]@{
                 Coord = $coord
-                LinkCoords = @()
-                LinkObjs = @()
+                Links = @()
+                Unit = $null
+                dist = $null
+                prev = $null
             }
             foreach($delta in (-1,0),(1,0),(0,-1),(0,1) ){
                 $neighbourCoord = $coord+$delta
                 if($neighbourCoord.Contained($rows,$cols) -and
                     $rawdata[$neighbourCoord.row][$neighbourCoord.col] -ne "#"){
-                    $mapTile.LinkCoords += $neighbourCoord
+                    $mapTile.Links += $neighbourCoord
                 }
             }
 
@@ -53,8 +55,13 @@ for ($y = 0; $y -lt $rows; $y++) {
                 Coord = $coord
                 Health = 200
             }
+            $map[$coord.Hash()].Unit = $combatants[-1]
         }
     }
+}
+# Change links from coords to objs
+foreach($mapTile in $map.Values){
+    $mapTile.Links = $map.Values | ?{$_.Coord -in $mapTile.Links}
 }
 
 function print-map(){
@@ -79,24 +86,54 @@ function print-map(){
     }
 }
 
-function calc-movedirection($unit){
-    # Need to start at the units location and move out from there
-    # Use a queue so it'll flood fill
-    $coordsSearched = @{}
-    $searchQueue = new-object "System.Collections.Queue"
-    
-    $coordsSearched[$unit.Coord.Hash()] = 0
-    $searchQueue.Enqueue(@($unit.Coord,0))
-    while($searchQueue.Count){
-        $loc,$step = $searchQueue.Dequeue()
-        # Find all neighbours that are valid, and haven't been searched yet
-        $loc.OrthNeighbours() | ?{-not $coordsSearched.ContainsKey($_.Hash())} | 
-        ?{ $map[$_.Hash()] -ne $null } | ?{ $_ -notin $combatants.Coords } | %{
-            $coordsSearched[$_.Hash()] = $step+1
-            $searchQueue.Enqueue(($_,($step+1)))
+function dikstras($graph, $startNode) {
+
+    $q = New-Object "System.Collections.Generic.PriorityQueue[psobject,int]"
+
+    $startNode.dist = 0
+    $q.Enqueue($startNode, 0)
+
+    while ($q.Count) {
+        $u = $q.Dequeue()
+        foreach ($v in $u.links) {
+            if($v.Unit -ne $null){continue}
+            $alt = $u.dist + 1
+            if ($v.dist -eq $null -or $alt -lt $v.dist) {
+                $v.prev = $u
+                $v.dist = $alt
+                $q.Enqueue($v, $v.dist) 
+            }
         }
     }
-    $z # UP TO HERE. Need to keep track of step direction... Maybe 
+}
+
+function calc-movedirection($unit){
+    # Need to start at the units location and move out from there
+    foreach($mapTile in $map.Values){
+        $mapTile.prev = $null
+        $mapTile.dist = $null
+    }
+
+    dikstras $map $map[$unit.Coord.Hash()] 
+
+    $availableNextToEnemy = $map.Values | ?{$_.dist} | ?{$_.Links.Unit.Team} | ?{$_.Links.Unit.Team -ne $unit.Team} 
+
+    #Now just walk back through the links, find the squares that can be stepped on
+    #Break ties, then move
+    #update map unit links
+    
+    $z
+
+    # while($searchQueue.Count){
+    #     $loc,$step = $searchQueue.Dequeue()
+    #     # Find all neighbours that are valid, and haven't been searched yet
+    #     $loc.OrthNeighbours() | ?{-not $coordsSearched.ContainsKey($_.Hash())} | 
+    #     ?{ $map[$_.Hash()] -ne $null } | ?{ $_ -notin $combatants.Coords } | %{
+    #         $coordsSearched[$_.Hash()] = $step+1
+    #         $searchQueue.Enqueue(($_,($step+1)))
+    #     }
+    # }
+    # $z # UP TO HERE. Need to keep track of step direction... Maybe 
 }
 
 
@@ -114,6 +151,7 @@ while( ($combatants.Team | group).count -gt 1){
         ## Move
         $enemysNextTo = $combatants | ? {$_.team -ne $combatant.Team} | ?{ $_.Coord -in $orthoCoords}
         if($enemysNextTo.Count -lt 1){
+            print-map
             $moveDirection = calc-movedirection($combatant)
             exit
         }
