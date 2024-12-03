@@ -3,6 +3,25 @@ param(
     [string]$foldername
 )
 
+# If path is just a year, then generate the next day
+if($foldername -match '^20\d\d$'){
+    $max = Get-ChildItem -Path "./$foldername/" -Directory | %{[int]$_.Name.TrimStart("day")} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $foldername+="/day$($max+1)"
+}
+
+# Check to make sure directory doesn't already exist
+if(test-path "./$foldername"){
+    Write-Host "Path already exists" -ForegroundColor Red
+    exit
+}
+
+# If path is just a year, then generate the next day
+if($foldername -match '^20\d\d$'){
+    Get-ChildItem -Path "./$foldername/" -Directory
+
+    exit
+}
+
 New-Item -Path "./$foldername" -ItemType Directory
 New-item -Path "./$foldername/part1.ps1"
 New-item -Path "./$foldername/input.txt"
@@ -33,3 +52,8 @@ $data = get-content $Path
 '@
 
 Out-File -FilePath "./$foldername/part1.ps1" -InputObject $template
+
+
+# Open new files in VSCode
+code --reuse-window "./$foldername/testcases/test1.txt" "./$foldername/input.txt" "./$foldername/part1.ps1"
+
