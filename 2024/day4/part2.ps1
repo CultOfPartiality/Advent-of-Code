@@ -28,9 +28,8 @@ function Solution {
                 # Check that we have:
                 #   - Two "M"'s
                 #   - Two "S"'s
-                #   - There's one of either "MM" or "SS" going round the circle (i.e. by making the word), 
-                #     indicating we don't have diagonal "SAS" or "MAM"
-                if (($chars -eq "M").Count -eq 2 -and ($chars -eq "S").Count -eq 2 -and ($chars -join "") -match "SS|MM"){
+                #   - We don't have diagonal "SAS" or "MAM". Only have to check one pair
+                if (($chars -eq "M").Count -eq 2 -and ($chars -eq "S").Count -eq 2 -and $chars[0] -ne $chars[2]){
                     $total++
                 }
             }
