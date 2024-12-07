@@ -1,15 +1,18 @@
 . "$PSScriptRoot\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+
+<#
+    This fella is certainly not optimised, takes ~2 minutes to run. 
+    Keeping track of the previous path and starting off right before an obsticle wasn't quite it.
+    Maybe keeping track of all routes, and check for loops that way? Maybe the overhead from the Hash's is the issue?
+#>
 
 function Solution {
     param ($Path)
 
-
+    # Parse the map, and locate the guard
     $data = get-content $Path
-
     $walls = @{}
     $guard = @{}
     $visited = @{}
@@ -28,7 +31,7 @@ function Solution {
     }
 
 
-    #Returns if guard is in a loop
+    #A functon to check the visited squares of a guard's path, and returns if guard is in a loop
     function Sim-Guard {
         param(
             $origGuard,
@@ -72,37 +75,25 @@ function Solution {
         return ($visited,$loop)
     }
     
+    #Run the initial state of the guard
     $visited,$_ = Sim-Guard -origGuard $guard -originalWalls $walls -newWall (-1,-1)
 
+    # Run each square on the path (except for the starting square) as if it was an obstruction, and check for a loop
     $causedALoop = 0
     $checked = 0
-    
-    # Need to remove starting square
     $possibleObstructions = $visited.Keys | ?{$_ -ne "$($guard.y),$($guard.x)"}
     foreach ($possibleObstruction in $possibleObstructions) {
         $checked++
-        write-host "Checking $checked/$($visited.Count)" 
         $newWall = $possibleObstruction -split "," | %{[int]$_}
-        #Need to start the guard just before the new obstructions to reduce computation time?
-        # $newGuard = @{
-        #     x = $newWall[1]
-        #     y = $newWall[0]
-        #     dir = $visited[$possibleObstruction]
-        # }
-        # switch ($visited[$possibleObstruction]) {
-        #     0 { $newGuard.y++ }
-        #     1 { $newGuard.x++ }
-        #     2 { $newGuard.y-- }
-        #     3 { $newGuard.x-- }
-        # }
         $_,$loop = Sim-Guard -origGuard $guard -originalWalls $walls -newWall $newWall
         if($loop){
-            write-host "  Loop!" -ForegroundColor Green
             $causedALoop++
         }
     }
-    #Output the number that caused a loop
+
+    #Output the number of obstructions that caused a loop
     $causedALoop
+
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 6
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
