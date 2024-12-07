@@ -1,65 +1,42 @@
 . "$PSScriptRoot\..\..\Unit-Test.ps1"
-
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
-
 function Solution {
 	param ($Path)
 
-	# For each line, work out how many permutations of +'s, *'s, and ||'s there are. Each permuation encodes the operations
-	# to execute in trinary, where a 0 trit is +, a 1 trit is *, and a 2 trit is concat. Run each until we find a perm that works, 
-	# then add that total to the calibartion value.
+	# Same as part 1, except with the concat operation. Getting this working as a "remove" was a bear, as the ".TrimEnd" function
+	# acts as list of chars to remove. So triming "18" from "818" results in nothing...
 
-	# Parallelisation here is pretty good, since checking each line against all perms can take some work
-	# Without "-Parallel" it takes longer than at least 5 minutes (I got bored waiting)
-
-	get-content $Path | Foreach-Object -ThrottleLimit 16 -Parallel {
+	get-content $Path | Foreach-Object {
 		$line = $_
 		[int64]$total, [int64[]]$values = ($line -replace ":", "" -split " ")
 
-		# The concat only will alway be the biggest, but usually this is too big, and we already know from
-		# part 1 that just multiplying the entries can get us valid totals
-		$min = 0
-		$max = 1
-		$concatMax = [int64]($values -join "")
-		foreach($value in ($values -ne 1)){
-			$min+=$value
-			$max*=$value
-		}
-		# Exit early if the min or max value was already valid, or the total would be out of reach
-		if($total -in $min,$max,$concatMax){
-			$total
-			return
-		}
-		#This removes 3 entries from the calc....
-		if($concatMax -lt $total -or $min -gt $total){
-			write-host "$_ max isn't big enough, or min is too large " -foregroundcolor red
-			return
-		}
+		function check-recursive($total, $remainingValues) {
+			# Reducing the total too much, or dividing to a fraction, means we can invalidate this check early
+			if ($total -lt $remainingValues[0] -or ($total % 1) -gt 0 ) { return $false }
+
+			# Once we're down to the final value, it should equal the total we've made
+			if ($remainingValues.count -eq 1) { return ($total -eq $remainingValues[0]) }
 	
-		$perms = [math]::pow(3, $values.Count - 1)
-		:permLoop for ($currentPerm = 0; $currentPerm -lt $perms; $currentPerm++) {
-			#
-			$currentTotal = $values[0]
-			for ($opPos = 0; $opPos -lt ($values.Count - 1); $opPos++) {
-				$opNum = [math]::Floor($currentPerm / [math]::pow(3, $opPos)) % 3
-				switch ($opnum) {
-					2 { $currentTotal += $values[$opPos + 1] }
-					1 { $currentTotal *= $values[$opPos + 1] }
-					0 { $currentTotal = [int64]("$currentTotal" + "$($values[$opPos + 1])") }
-				}
-				if ($currentTotal -gt $total) { continue permLoop }
+			# Otherwise, perform the other checks
+			if(check-recursive ($total - $remainingValues[-1]) $remainingValues[0..($remainingValues.count - 2)]) {return $true}
+			if(check-recursive ($total / $remainingValues[-1]) $remainingValues[0..($remainingValues.count - 2)]) {return $true}
+				
+			if(([string]$total).EndsWith([string]$remainingValues[-1])){
+				$strTotal = [string]$total
+				$strValue = [string]$remainingValues[-1]
+				$total = [int64]$strTotal.Substring(0,$strTotal.Length - $strValue.Length)
+				return (check-recursive $total $remainingValues[0..($remainingValues.count - 2)]) 
 			}
-			if ($currentTotal -eq $total) {
-				# write-host " -> $line is good" -ForegroundColor Green
-				$total
-				break permLoop
-			}
+			return $false
+		}
+
+		if ( (check-recursive $total $values) ) {
+			return $total
 		}
 	} | measure -sum | select -ExpandProperty Sum
     
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 11387
+Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 1274
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 

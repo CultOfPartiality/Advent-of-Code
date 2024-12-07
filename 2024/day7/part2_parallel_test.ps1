@@ -6,6 +6,9 @@ $Path = "$PSScriptRoot/testcases/test1.txt"
 function Solution {
 	param ($Path)
 
+	# NOTE
+	# Keeping this for reference
+
 	# For each line, work out how many permutations of +'s, *'s, and ||'s there are. Each permuation encodes the operations
 	# to execute in trinary, where a 0 trit is +, a 1 trit is *, and a 2 trit is concat. Run each until we find a perm that works, 
 	# then add that total to the calibartion value.
