@@ -130,7 +130,7 @@ function Split-Array {
 
 	# If only returning one group, we still need to force it to return an array of arrays
 	if($Groups -eq 1){
-		return ,(,$Array)
+		return ,($Array)
 	}
 	
 	$index = 0
