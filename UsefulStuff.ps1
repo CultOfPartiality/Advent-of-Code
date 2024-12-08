@@ -102,3 +102,41 @@ function isPrime($num) {
 	}
 	return $prime
 }
+
+# Split an array up into groups of x, or y groups
+# Will attempt to make that many, but might not if the size doesn't work out
+# Accepts pipeline input
+function Split-Array {
+
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, ValueFromPipeline)] $Array,
+		$GroupSize,
+		$Groups = -1
+	)
+
+	# Get the array from the pipeline, as an actual array and not unrolled
+	if( $input ){
+	 	$Array = $input
+	}
+
+	# Recalcuate group size if number of groups required
+	if ($Groups -gt 0) {
+		$GroupSize = [Math]::Ceiling($Array.Count / $Groups)
+	}
+
+	# Actual amount of groups created
+	$Groups = [Math]::Ceiling($Array.Count / $GroupSize)
+
+	# If only returning one group, we still need to force it to return an array of arrays
+	if($Groups -eq 1){
+		return ,(,$Array)
+	}
+	
+	$index = 0
+	while ($index -lt $Array.Count) {
+		,$Array[$index..($index + $GroupSize - 1)]
+		$index += $GroupSize
+	}
+	return
+}
