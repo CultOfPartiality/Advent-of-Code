@@ -1,12 +1,10 @@
 . "$PSScriptRoot\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
-
 function Solution {
     param ($Path)
 
+    # Same as part 1, since this is already optimised somewhat
 
     $stones = @{}
     (get-content $Path) -split " " | % {
@@ -22,10 +20,8 @@ function Solution {
                 { $value -gt 9 -and [math]::Ceiling([math]::Log10($value+1)) % 2 -eq 0 } {
                     $numOfChars = [math]::Ceiling([math]::Log10($value+1))
                     $splitter = [math]::Pow(10,($numOfChars/2))
-                    $val1 = [math]::Truncate($value / $splitter)
-                    $val2 = $value % $splitter
-                    $newStones[$val1] += $stones[$value]
-                    $newStones[$val2] += $stones[$value]
+                    $newStones[[math]::Truncate($value / $splitter)] += $stones[$value]
+                    $newStones[$value % $splitter] += $stones[$value]
                 }
                 Default { $newStones[$value*2024] += $stones[$value] }
             }
