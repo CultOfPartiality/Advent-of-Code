@@ -1,3 +1,5 @@
+$orthDeltas = (-1,0),(0,-1),(0,1),(1,0)
+
 class Coords {
 
     $row
@@ -63,6 +65,12 @@ class Coords {
             ($this+(0,1)),
             ($this+(1,0))
         )
+    }
+
+    # Return orthogonal neighbours in "reading order" (top to bottom, then left to right), but that
+    # are contained inside the map starting at 0,0
+    [array] ValidOrthNeighbours($rowCount,$colCount) {
+        return $this.OrthNeighbours().Where({$_.Contained($rowCount,$colCount)})
     }
 
 }
