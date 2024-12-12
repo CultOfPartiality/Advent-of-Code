@@ -1,18 +1,20 @@
 . "$PSScriptRoot\..\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\..\UsefulStuff.ps1"
-
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
 
 function Solution {
     param ($Path)
 
-
+    # For each list, check the following:
+    #   All items are increasing/decreasing
+    #   No jump is bigger than 3
+    #   No jump is smaller than 1 (i.e. repeated number)
+    # 
+    # We're keeping track of if the array is increasing or decreasing, and return the OR of those
+    # outcomes. However if we see an invalid jump, we exit early
+    
     $data = get-content $Path | % { , [System.Collections.ArrayList]($_ -split " " | % { [int]$_ }) }
 
     $safe = foreach ($list in $data) {
-        $rising = $true
-        $falling = $true
+        $rising = $falling = $true
         for ($i = 1; $i -lt $list.Count; $i++) {
             $diff = [Math]::ABS($list[$i] - $list[$i - 1])
         
@@ -31,9 +33,11 @@ function Solution {
         }
         $rising -or $falling
     }
-    ($safe -eq $true).Count
     
+    # Output the number of "safe" sequences
+    ($safe -eq $true).Count
 }
+
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 2
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
