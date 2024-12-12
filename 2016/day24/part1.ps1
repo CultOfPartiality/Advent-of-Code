@@ -56,11 +56,11 @@ function Get-ValidNeighours {
     }
 }
 
-# Do A* (or is it dykstra?) to avoid redoing work within each search. We'll use a queue, so as to do a bredth first search
+# Do A* (or is it dijkstra?) to avoid redoing work within each search. We'll use a queue, so as to do a bredth first search
 # TODO: will need to reset nextSquares for next round of A*
 # for each number in numbers
 foreach ($startingNumber in $numbers) {
-    Write-Host "Starting dykstra from number $($startingNumber.data)"
+    Write-Host "Starting dijkstra from number $($startingNumber.data)"
     $squares.Values | %{
         $_.steps=[int32]::MaxValue
     #    $_.nextSquare=$null

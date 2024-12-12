@@ -1,4 +1,4 @@
-# Need to implement a general dykstras to be able to reuse
+# Need to implement a general dijkstras to be able to reuse
 
 # Each node in the graph needs at minimum:
 #   dist - Start at a verybig number
