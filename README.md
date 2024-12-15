@@ -1,1 +1,1 @@
-Tackling Advent of Code, mostly in PowerShell
+Tackling Advent of Code, mostly in PowerShell but sometimes in other things for fun
