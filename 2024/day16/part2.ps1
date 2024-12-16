@@ -43,6 +43,8 @@ function Solution {
     $searchSpace = New-Object "System.Collections.Generic.PriorityQueue[psobject,int]"
     $searchSpace.Enqueue($deer, 0)
 
+    #TODO - Optimise is a path joins an existing good path?
+
     $possibleDeers = @()
     $debug = 0
     while ($searchSpace.count) {
@@ -99,10 +101,12 @@ function Solution {
             write-host "$debug checks performed, queue length:$($searchSpace.Count)"
         }
     }
-    $paths = @()
+
+    # Add each step of each path to a common hash to add them all up
+    $paths = @{}
     $possibleDeers | %{
         $_.path | %{
-            if($_ -notin $paths){$paths += $_}
+            $paths[$_.Hash()]++
         }
     }
     $paths.count
