@@ -1,0 +1,19 @@
+2,4,1,1,7,5,0,3,1,4,4,5,5,5,3,0
+
+2,4     bst 4   +-> A % 8 -> B          Load B with 3 LSBs of A
+1,1     bxl 1   |   B XOR 1 -> B        Toggle LSB in B
+7,5     cdv 5   |   A // (2^B) -> C     A >> B+1 -> C
+0,3     adv 3   |   A // (2^3) -> A     A >> 3 -> A
+1,4     bxl 4   |   B XOR 4 -> B        Toggle 3rd bit in B
+4,5     bxc 5   |   B XOR C -> B        <-------
+5,5     out 5   |   (B % 8) >> out
+3,0     jnz 0   +-- A != 0
+
+
+Need to load A with the value to produce the program
+
+Out = (A % 8) XOR 1 XOR 4 XOR (A % 8) % 8
+
+Each number is 3 bits of A, so A needs to be [46,48] bits
+
+
