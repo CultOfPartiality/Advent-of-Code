@@ -47,6 +47,11 @@ class Coords {
         return @($this.row,$this.col)
     }
 
+    #The index in a 1D array
+    [int] OneDimIndex($colCount) {
+        return ($this.row*$colCount + $this.col)
+    }
+
     #Check if a coord is with a rectangle, starting from 0,0
     [bool]Contained($rowCount,$colCount){
         return (
