@@ -77,19 +77,20 @@ function Solution {
         $stepVal = $map[$step.array()]
         for ($y = [math]::Max(($step.row-$dist),0); $y -lt [math]::Min(($step.row+$dist),$height); $y++) {
             for ($x = [math]::Max(($step.col-$dist),0); $x -lt [math]::Min(($step.col+$dist),$width); $x++) {
-                $val = $map[$y,$x]
-                if($val -eq -1){continue}
-                if($val -lt $stepVal){continue}
+                $skipVal = $map[$y,$x]
+                
+                if($skipVal -eq -1){continue}
+                
                 $normalDist = $step.Distance(([coords]($y,$x)))
                 if($normalDist -gt $dist){continue}
-                $skip = $stepVal-$val
-                if(
-                    $skip -gt $dist -and
-                    $skip -gt $normalDist -and 
-                    $skip -gt 100
-                ){
-                    $cheats++
-                }
+                
+                if($skipVal -le $stepVal){continue}
+                
+                $skip = $skipVal-$stepVal
+                if($skip -le 100){continue}
+
+                # if($normalDist -ge $skip){continue}
+                $cheats++
             }
         }
     }
@@ -97,5 +98,5 @@ function Solution {
 }
 # Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 44
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
