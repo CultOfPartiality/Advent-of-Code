@@ -3,13 +3,13 @@
 . "$PSScriptRoot\..\..\OtherUsefulStuff\Class_Coords.ps1"
 
 #The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+# $Path = "$PSScriptRoot/testcases/test1.txt"
 
 function Solution {
-    param ($Path)
+    param ($arguments)
 
 
-    $data = get-content $Path
+    $data = get-content $arguments.Path
     $width = $data[0].length
     $height = $data.count
 
@@ -17,7 +17,7 @@ function Solution {
     #normal race time
     # Generate the map with the number of corrupted bytes
     $map = New-Object "int[,]" $height, $width
-    $track = @()
+    $track = @($start)
     for ($y = 0; $y -lt $height; $y++) {
         for ($x = 0; $x -lt $width; $x++) {
             $coord = [coords]($y, $x)
@@ -72,31 +72,37 @@ function Solution {
     }
 
     $cheats = 0
-    $dist = 2
+    $dist = $arguments.dist
+    $thresh = $arguments.thresh
     foreach ($step in $track) {
-        $stepVal = $map[$step.array()]
-        for ($y = [math]::Max(($step.row-$dist),0); $y -lt [math]::Min(($step.row+$dist),$height); $y++) {
-            for ($x = [math]::Max(($step.col-$dist),0); $x -lt [math]::Min(($step.col+$dist),$width); $x++) {
-                $skipVal = $map[$y,$x]
+        $startSteps = $map[$step.array()]
+        for ($y = [math]::Max(($step.row - $dist), 0); $y -le [math]::Min(($step.row + $dist), $height); $y++) {
+            for ($x = [math]::Max(($step.col - $dist), 0); $x -le [math]::Min(($step.col + $dist), $width); $x++) {
+                $endSteps = $map[$y, $x]
                 
-                if($skipVal -eq -1){continue}
+                #Ignore walls
+                if ($endSteps -eq -1) { continue }
+                #Ignore going backwards
+                if ($endSteps -le $startSteps) { continue }
                 
-                $normalDist = $step.Distance(([coords]($y,$x)))
-                if($normalDist -gt $dist){continue}
+                #Make sure the manhattan distance is valid
+                $cheatDist = $step.Distance(([coords]($y, $x)))
+                if ($cheatDist -gt $dist) { continue }
                 
-                if($skipVal -le $stepVal){continue}
-                
-                $skip = $skipVal-$stepVal
-                if($skip -le 100){continue}
-
-                # if($normalDist -ge $skip){continue}
-                $cheats++
+                #Need to save at least the threshold
+                $nonCheatDist = $endSteps - $startSteps
+                if ( ($nonCheatDist - $cheatDist) -ge $thresh) {
+                    $cheats++
+                }
             }
         }
     }
     $cheats
 }
-# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 44
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/testcases/test1.txt"; thresh = 2; dist = 2 } 44
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/input.txt"; thresh = 100; dist = 2 } 1459
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/testcases/test1.txt"; thresh = 50; dist = 20 } 285
+$measuredTime = measure-command { $result = Solution @{Path = "$PSScriptRoot\input.txt"; thresh = 100; dist = 20 } }
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+if ($result -in (1015795)) { write-host "1015795 is too low" -ForegroundColor Red }
 
