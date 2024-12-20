@@ -20,6 +20,10 @@ function Get-AllPairs {
 	$a = @() + $array
 	$b = @() + $array
 
+	if($array.count -eq 2){
+		return ,$array
+	}
+
 	
 	$b = $b | % {
 		$current = $_
