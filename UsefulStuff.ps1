@@ -144,3 +144,20 @@ function Split-Array {
 	}
 	return
 }
+
+
+function Sum-Array {
+
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, ValueFromPipeline)] $Array
+	)
+
+	# Get the array from the pipeline, as an actual array and not unrolled
+	if( $input ){
+		$Array = $input
+   }
+
+	($Array | Measure-Object -Sum).Sum
+
+}
