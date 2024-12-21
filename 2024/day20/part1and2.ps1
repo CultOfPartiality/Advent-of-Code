@@ -3,13 +3,13 @@
 . "$PSScriptRoot\..\..\OtherUsefulStuff\Class_Coords.ps1"
 
 #The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+$arguments = @{Path = "$PSScriptRoot/testcases/test1.txt"; thresh = 2;   dist = 2  }
 
 function Solution {
-    param ($Path)
+    param ($arguments)
 
 
-    $data = get-content $Path
+    $data = get-content $arguments.Path
     $width = $data[0].length
     $height = $data.count
 
@@ -17,14 +17,12 @@ function Solution {
     #normal race time
     # Generate the map with the number of corrupted bytes
     $map = New-Object "int[,]" $height, $width
-    $walls = @()
     for ($y = 0; $y -lt $height; $y++) {
         for ($x = 0; $x -lt $width; $x++) {
             $coord = [coords]($y, $x)
             switch ($data[$y][$x]) {
                 '#' {
                     $map[$y, $x] = -1
-                    $walls += $coord
                 }
                 'S' { $start = $coord; }
                 'E' { $end = $coord }
@@ -32,6 +30,7 @@ function Solution {
             }
         }
     }
+    $track = @($start)
 
     function print-map {
         for ($y = 0; $y -lt $height; $y++) {
@@ -66,27 +65,55 @@ function Solution {
             if ($val -eq -1) { continue } #Don't go into wall
             if ($val -eq 0 -or $val -gt ($cellVal + 1)) {
                 $map[$validNeighbour.Array()] = $cellVal + 1
+                $track += $validNeighbour
                 $searchSpace.Enqueue($validNeighbour)
             }
         }
     }
 
     $cheats = 0
-    #Then check each wall for skips.
-    foreach ($wall in $walls) {
-        $neighbours = $wall.ValidOrthNeighbours($height, $width)
-        $vals = $neighbours | % { $map[$_.Array()] } | ? { $_ -ge 0 }
-        if ($vals.count -le 1) { continue }
-
-        Get-AllPairs $vals | % {
-            if ([math]::ABS($_[0] - $_[1]) -gt 100) {
-                $cheats++
+    $dist = $arguments.dist
+    $thresh = $arguments.thresh
+    foreach ($step in $track) {
+        $startSteps = $map[$step.Array()]
+        for ($y = [math]::Max(($step.row - $dist), 0); $y -lt [math]::Min(($step.row + $dist+1), $height); $y++) {
+            for ($x = [math]::Max(($step.col - $dist), 0); $x -lt [math]::Min(($step.col + $dist+1), $width); $x++) {
+                $endSteps = $map[$y, $x]
+                
+                #Ignore walls
+                if ($endSteps -eq -1) { continue }
+                
+                #Ignore going backwards, or not far enough
+                $nonCheatDist = $endSteps - $startSteps
+                if ($nonCheatDist -lt $thresh) { continue }
+                
+                #Make sure the manhattan distance is valid
+                $cheatDist = $step.Distance(([coords]($y, $x)))
+                if ($cheatDist -gt $dist) { continue }
+                
+                #Need to save at least the threshold
+                if ( ($nonCheatDist - $cheatDist) -ge $thresh) {
+                    $cheats++
+                }
             }
         }
     }
     $cheats
 }
-# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 44
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+
+# Part 1
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/testcases/test1.txt"; thresh = 2;   dist = 2  } 44
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/input.txt";           thresh = 100; dist = 2  } 1459 #Result for part 1
+
+$measuredTime = measure-command { $result = Solution @{Path = "$PSScriptRoot\input.txt"; thresh = 100; dist = 2 } }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+
+
+
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/testcases/test1.txt"; thresh = 50;  dist = 20 } 285
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/input.txt"; thresh = 100;  dist = 20 } 1016066 #Result for part 2
+
+$measuredTime = measure-command { $result = Solution @{Path = "$PSScriptRoot\input.txt"; thresh = 100; dist = 20 } }
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+
 
