@@ -13,13 +13,18 @@ Function might best look like:
 #>
 function Unit-Test {
     param ([scriptblock]$function,$inputData,$expectedAnswer)
-    write-host "Example '$inputData': " -NoNewline -ForegroundColor Yellow
-    $measuredTime = measure-command {
-        $answer = $function.InvokeReturnAsIs($inputData)
+
+    #Allow passing a hash into the unit test, for running the solution with multiple inputs
+    if($inputData.Path){
+        write-host "Example '$($inputData.Path)': " -NoNewline -ForegroundColor Yellow
     }
+    else{
+        write-host "Example '$inputData': " -NoNewline -ForegroundColor Yellow
+    }
+
+    $measuredTime = measure-command { $answer = $function.InvokeReturnAsIs($inputData) }
     if($answer -eq $expectedAnswer){
         write-host "Example passed ✔ ($($measuredTime.TotalSeconds)s)" -ForegroundColor Green
-        #Return $true
     }
     else{
         write-host "Example failed ✖  | " -NoNewline -ForegroundColor Red
