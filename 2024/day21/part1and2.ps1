@@ -2,12 +2,12 @@
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
 #The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+$arguments = @{Path = "$PSScriptRoot/testcases/test1.txt"; MiddleBots = 2 }
 
 function Solution {
-	param ($Path)
+	param ($arguments)
 
-	$codes = get-content $Path
+	$codes = get-content $arguments.Path
 
 	function generate-numpadlookup() {
 		<#
@@ -127,14 +127,6 @@ function Solution {
 		# Remember, no gaps, find the paths. We'll work out which is shortest and the end (?)
 		$lookup = generate-numpadlookup
 
-		#Double check lookup
-		(Get-AllPairs (0..9 + "A")) | % {
-			if ($null -eq $lookup[$_ -join ","]) {
-				write-host ($_ -join ",")
-				exit
-			}
-		}
-
 
 		$validPaths = @()
 		$bot = [PSCustomObject]@{
@@ -149,10 +141,6 @@ function Solution {
 			$bot = $searchSpace.Dequeue()
 			$nextKey = $reqSeq[$bot.steps]
 			$paths = $lookup[($bot.pos, $nextKey -join ",")]
-			if ($paths -eq $null) {
-				write-host "ERROR - Missing lookup entry $(($bot.pos, $nextKey -join ","))"
-				exit
-			}
 			foreach ($possiblePath in ($paths | % { $bot.seq + $_ + "A" })) {
 				if ($nextKey -eq "A") {
 					$validPaths += $possiblePath
@@ -166,67 +154,41 @@ function Solution {
 				}
 			}
 		}
-		$validPaths
+		if ($validPaths -is [string]) {
+			return , ($validPaths)
+		}
+		return $validPaths
 	}
 
 	$directionalLookup = @{}
 	$directionalLookup["A,^"] = "<"
 	$directionalLookup["A,>"] = "v"
-	$directionalLookup["A,v"] = "v<"#,"<v"
-	$directionalLookup["A,<"] = "v<<"#,"<v<" # Remove sub-optimal case, slows it down a lot
+	
+	# THE ORDER ON THIS ONE REALLY MATTERS! It's the difference between getting it and not.
+	# See https://www.reddit.com/r/adventofcode/comments/1hjgyps/2024_day_21_part_2_i_got_greedyish/ for details, although one
+	# of the comments points out for diagonals:
+	#		- When left has to happen , always go left first
+	#		- Otherwise, do the up/down first
+	$directionalLookup["A,v"] = "<v"#,"v<" 
+
+	$directionalLookup["A,<"] = "v<<"#,"<v<" # Remove sub-optimal case
 	$directionalLookup["^,<"] = "v<"
 	$directionalLookup["^,v"] = "v"
-	$directionalLookup["^,>"] = "v>"#,">v" #Each option ends up facing the wrong way for a run of the same directino
+	$directionalLookup["^,>"] = "v>"#, ">v"
 	$directionalLookup["^,A"] = ">"
 	$directionalLookup["<,v"] = ">"
 	$directionalLookup["<,>"] = ">>"
 	$directionalLookup["<,^"] = ">^"
-	$directionalLookup["<,A"] = ">>^"#,">^>" # Remove sub-optimal case, slows it down a lot
+	$directionalLookup["<,A"] = ">>^"#,">^>" # Remove sub-optimal case
 	$directionalLookup[">,v"] = "<"
 	$directionalLookup[">,<"] = "<<"
-	$directionalLookup[">,^"] = "<^"#,"^<" 
+	$directionalLookup[">,^"] = "<^"#, "^<" 
 	$directionalLookup[">,A"] = "^"
 	$directionalLookup["v,<"] = "<"
 	$directionalLookup["v,^"] = "^"
 	$directionalLookup["v,>"] = ">"
-	$directionalLookup["v,A"] = "^>"#,">^" # > is a better ending spot?
-
-
-	# function directional-sequences([char[]]$reqSeq) {
-	# 	$validPaths = @()
-	# 	$bot = [PSCustomObject]@{
-	# 		pos     = "A"
-	# 		steps   = 0
-	# 		seq     = ""
-	# 		# lastDir = ""
-	# 	}
-	# 	$searchSpace = New-Object System.Collections.Queue
-	# 	$searchSpace.Enqueue($bot)
-	# 	while ($searchSpace.count) {
-	# 		$bot = $searchSpace.Dequeue()
-	# 		$nextKey = $reqSeq[$bot.steps]
-	# 		$paths = $directionalLookup[( ($bot.pos, $nextKey) -join ",")]
-	# 		$possiblePaths = ($paths | % { $bot.seq + $_ + "A" })
-	# 		# $optimalPaths = $possiblePaths | ? { $_.TrimEnd("A")[-1] -eq $bot.lastDir }
-	# 		# if ($optimalPaths.count -gt 0) {
-	# 		# 	$possiblePaths = $optimalPaths
-	# 		# }
-	# 		foreach ($path in $possiblePaths) {
-	# 			if (($bot.steps + 1) -eq $reqSeq.count) {
-	# 				$validPaths += $path
-	# 			}
-	# 			else {
-	# 				$searchSpace.Enqueue([pscustomobject]@{
-	# 						pos     = $nextKey
-	# 						steps   = $bot.steps + 1
-	# 						seq     = $path
-	# 						# lastDir = $path.TrimEnd("A")[-1]
-	# 					})
-	# 			}
-	# 		}
-	# 	}
-	# 	$validPaths
-	# }
+	$directionalLookup["v,A"] = "^>"#, ">^"
+	
 
 	function directional-sequences([char[]]$reqSeq) {
 		$validPaths = @()
@@ -263,112 +225,76 @@ function Solution {
 				}
 			}
 		}
-		$validPaths
+
+		if ($validPaths -is [string]) {
+			return , ($validPaths)
+		}
+		return $validPaths
 	}
 
-	function directional-sequences_single([char[]]$reqSeq) {
-		$bot = [PSCustomObject]@{
-			pos   = "A"
-			steps = 0
-			seq   = ""
-		}
-		while ($true) {
-			if($reqSeq[$bot.steps] -eq $reqSeq[$bot.steps-1]){
-				$bot.steps++
-				$bot.seq+="A"
-				continue
+	#Depth, start, end (at next layer down) = cost (includes pressing A, i.e. +1)
+	$cache = @{}
+	function calc ($depth, $start, $end) {
+		#Check the cache, and if not found generate is and add it to the cache
+		if (-not $cache.ContainsKey( ($depth, $start, $end -join ",") )) {
+			# Depth 0 is the main keypad, so just cache the optimal number of instructions for traversing
+			# to the desirec destination
+			if ($depth -eq 0) {
+				$seq = $directionalLookup["$start,$end"]
+				$cost = [Int64]($seq.length + 1)
+				$cache[ ($depth, $start, $end -join ",") ] = $cost
+				return $cost
 			}
-			$nextKey = $reqSeq[$bot.steps]
-			$bot.seq += $directionalLookup[( ($bot.pos, $nextKey) -join ",")] + "A" 
-			if (($bot.steps + 1) -eq $reqSeq.count) {
-				return $bot.seq
-			}
+			# Otherwise, sum up the instruction count to go from "A", through the desired instrcutions, and
+			# back to A so we click the button
 			else {
-				$bot.pos = $nextKey
-				$bot.steps++
-				# $bot.lastDir = $path.TrimEnd("A")[-1]
+				$seq = $directionalLookup["$start,$end"]
+				$seq += "A"
+				$total = [int64]0
+				$prev = "A"
+				foreach ($step in $seq.ToCharArray()) {
+					$total += (calc ($depth - 1) $prev $step)
+					$prev = $step
+				}
+				$cache[($depth, $start, $end -join ",")] = $total
+				return $total
 			}
 		}
-	}
-
-	function count-runs($seq) {
-		$runs = 0
-		for ($i = 1; $i -lt $seq.length; $i++) {
-			if ($seq[$i] -eq $seq[$i - 1]) { $runs++ }
+		else {
+			return $cache[($depth, $start, $end -join ",")]
 		}
-		$runs
 	}
 
 
 	$results = foreach ($code in $codes) {
-		$seqs = numpad-sequences $code
-		write-host "Working on $code"
-		
-		1..13 | % {
-			# Since we always end back on the A at every stage:
-			# 	- Number of "<" and ">" must always be equal
-			# 	- Number of "^" and "v" must always be equal
-			# Since the previous cycle needs X button pushes:
-			# 	- The number of "A"s is the count of symbols from the previous cycle
-
-
-			if ($seqs -in [string]) {
-				$seqs = directional-sequences_single $seqs
+		$Paths = numpad-sequences $code
+		$pathLengths = foreach ($path in $paths) {
+			$total = 0
+			$prev = "A"
+			foreach ($step in $path.ToCharArray()) {
+				$total += (calc ($arguments.MiddleBots - 1) $prev $step)
+				$prev = $step
 			}
-			else {
-				$seqs = foreach ($seq in $seqs) {
-					directional-sequences $seq
-				}
-			}
-			
-			
-			#After 1 round, if we don't see the sequence "<v>" we'll never be able to find
-			#that optimisation. Does this help?
-			if ($seqs -match "<v>") {
-				$z
-			}
-			$stats = $seqs | % { $_.length } | measure -Min -Max
-			# write-host "$($_): $($seqs.count) combos, min length: $($stats.Minimum), max length: $($stats.Maximum)"
-			write-host "$($_): $($stats.Minimum)"
-			
-			$seqs = $seqs | ? { $_.length -le ($stats.Minimum + 100) }
-			
-			# if ($seqs -isnot [string]) {	
-			# 	$runs = $seqs | %{ count-runs $_ }
-			# 	$maxRuns = ($runs | sort -Descending)[0]
-			# 	$newSeqs = @()
-			# 	for ($i = 0; $i -lt $seqs.Count; $i++) {
-			# 		if($runs[$i] -ge ($maxRuns-10)){
-			# 			$newSeqs+=$seqs[$i]
-			# 		}
-			# 	}
-			# 	# $seqs = $newSeqs
-
-			# 	write-host "Max runs: $maxRuns, combos remaining: $($seqs.count)"
-			# }
-			
+			$total
 		}
-		#At each next level, each char needs to be followed by an "A"
-		# 	1 "A" is needed to make an A
-		# 	^ needs <,A
-	
-		if ($seqs -is [string]) {
-			$shortestSeq = $seqs
-		}
-		else {
-			$shortestSeq = ($seqs | sort length)[0]
-		}
+		$shortestSeq = [Int64] ($pathLengths | sort)[0]
 		$number = ( [int] ($code -join "").TrimEnd("A") )
-		$complexity = $shortestSeq.length * $number
-		write-host "For $code -> $($shortestSeq.length) x $number = $complexity"
+		$complexity = $shortestSeq * $number
+		# write-host "For $code -> $shortestSeq x $number = $complexity"
 		$complexity
 	}
 
-	$results | sum-array
-
+	$results | Sum-Array
 }
-# Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 126384
-# Unit-Test  ${function:Solution} "$PSScriptRoot/input.txt" 176650
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+
+#Part 1
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/testcases/test1.txt"; MiddleBots = 2 } 126384
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/input.txt"; MiddleBots = 2 } 176650 # Actual soluiont for part 1
+$measuredTime = measure-command { $result = Solution @{Path = "$PSScriptRoot/input.txt"; MiddleBots = 2 } }
+Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+
+#Part 2
+Unit-Test  ${function:Solution} @{Path = "$PSScriptRoot/input.txt"; MiddleBots = 25 } 217698355426872 # Actual soluiont for part 2
+$measuredTime = measure-command { $result = Solution @{Path = "$PSScriptRoot/input.txt"; MiddleBots = 25 } }
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
