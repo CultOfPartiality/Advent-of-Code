@@ -2,12 +2,12 @@
 . "$PSScriptRoot\..\..\UsefulStuff.ps1"
 
 #The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+$arguments = @{Path="$PSScriptRoot/testcases/test1.txt";MiddleBots=2}
 
-# function Solution {
-# 	param ($Path)
+function Solution {
+	param ($arguments)
 
-$codes = get-content $Path
+$codes = get-content $arguments.Path
 
 function generate-numpadlookup() {
 	<#
@@ -193,14 +193,6 @@ $directionalLookup["v,<"] = "<"
 $directionalLookup["v,^"] = "^"
 $directionalLookup["v,>"] = ">"
 $directionalLookup["v,A"] = "^>"#,">^" # > is a better ending spot?
-
-$stage2Lookup = @{
-	"A"  = "A"
-	"^A" = "<A>A"
-	">A" = "vA^A"
-	"vA" = "v<A>^A"
-	"<A" = "v<<A>>^A"
-}
 	
 
 function directional-sequences([char[]]$reqSeq) {
@@ -245,69 +237,60 @@ function directional-sequences([char[]]$reqSeq) {
 	return $validPaths
 }
 
-
-$stage2Lookup = @{
-	"A"  = "A"
-	"^A" = "<A>A"
-	">A" = "vA^A"
-	"vA" = "v<A>^A"
-	"<A" = "v<<A>>^A"
+#Depth, start, end (at next layer down) = cost (includes pressing A, i.e. +1)
+$cache = @{}
+function calc ($depth, $start, $end) {
+	if (-not $cache.ContainsKey( ($depth, $start, $end -join ",") )) {
+		if ($depth -eq 0) {
+			$seq = $directionalLookup["$start,$end"]
+			$cache[ ($depth, $start, $end -join ",") ] = $seq.length + 1
+			return $seq.length + 1
+		}
+		else {
+			$seq = [string]$directionalLookup["$start,$end"] + "A"
+			$total = 0
+			$prev = "A"
+			foreach ($step in $seq.ToCharArray()) {
+				$total += (calc ($depth - 1) $prev $step)
+				$prev = $step
+			}
+			$cache[($depth, $start, $end -join ",")] = $total
+			return $total
+		}
+	}
+	else {
+		return $cache[($depth, $start, $end -join ",")]
+	}
 }
+
 
 $results = foreach ($code in $codes) {
-	write-host "Working on $code"
-		
-	$seq = numpad-sequences $code | % { directional-sequences $_ } | sort length | select -first 1
-		
-	# Since we always end back on the A at every stage:
-	# 	- Number of "<" and ">" must always be equal
-	# 	- Number of "^" and "v" must always be equal
-	# Since the previous cycle needs X button pushes:
-	# 	- The number of "A"s is the count of symbols from the previous cycle
-		
-	2..25 | % {
-		#Work out the shortest path for each operation required from the previous cycle
-		$index = 0
-		$startIndex = 0
-		$newString = ""
-		$bits = & {
-			while ($index -le $seq.length) {
-				while ($seq[$index] -ne "A" -and $index -le $seq.length) { $index++ }
-				if($seq[$index] -ne "A"){continue}
-				$segment = $seq[$startIndex..$index]
-				if (-not $stage2Lookup.ContainsKey( -join ($segment))) {
-					#Make new lookup
-					$newLookup = ""
-					$prev = "A"
-					for ($i = 0; $i -lt $segment.length; $i++) {
-						$newLookup += $directionalLookup[$prev, $segment[$i] -join ","] + "A"
-						$prev = $segment[$i]
-					}
-					$stage2Lookup[ -join ($segment)] = $newLookup
-					write-host "Stage 2 lookup now $($stage2Lookup.Count) entries"
-				}
-				
-				$stage2Lookup[ -join ($segment)]
-				$startIndex = $index = $index + 1
-			}
+	$Paths = numpad-sequences $code
+	$pathLengths = foreach ($path in $paths) {
+		$total = 0
+		$prev = "A"
+		foreach ($step in $path.ToCharArray()) {
+			$total += (calc ($arguments.MiddleBots-1) $prev $step)
+			$prev = $step
 		}
-		$seq = -join ($bits)
+		$total
 	}
-
-	$shortestSeq = $seq
-
+	$shortestSeq = ($pathLengths | sort)[0]
 	$number = ( [int] ($code -join "").TrimEnd("A") )
-	$complexity = $shortestSeq.length * $number
-	write-host "For $code -> $($shortestSeq.length) x $number = $complexity"
+	$complexity = $shortestSeq * $number
+	write-host "For $code -> $shortestSeq x $number = $complexity"
 	$complexity
-
 }
 
-$results | sum-array
+$results | Sum-Array
+}
 
-# # }
-# # Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 126384
-# # Unit-Test  ${function:Solution} "$PSScriptRoot/input.txt" 176650
-# $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
-# Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+#Part 1
+Unit-Test  ${function:Solution} @{Path="$PSScriptRoot/testcases/test1.txt";MiddleBots=2} 126384
+Unit-Test  ${function:Solution} @{Path="$PSScriptRoot/input.txt";MiddleBots=2} 176650
 
+#Part 2
+$measuredTime = measure-command { $result = Solution @{Path="$PSScriptRoot/input.txt";MiddleBots=25} }
+Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
+if($result -ge (324387118329086)){write-host "Too High!" -ForegroundColor Red}
+if($result -le (128219247654758)){write-host "Too Low!" -ForegroundColor Red}
