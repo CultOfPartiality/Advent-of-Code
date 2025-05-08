@@ -15,11 +15,11 @@ function Solution {
 		[int[]] $afterRegs = $_[2].TrimStart("After: [").TrimEnd("]") -split ", "
 
 		$possibleOps = @()
-		if ($beforeRegs[$A] + $beforeRegs[$B] -eq $afterRegs[$C]) { $possibleOps += "addr" }
-		if ($beforeRegs[$A] + $B -eq $afterRegs[$C]) { $possibleOps += "addi" }
+		if ( ($beforeRegs[$A] + $beforeRegs[$B]) -eq $afterRegs[$C]) { $possibleOps += "addr" }
+		if ( ($beforeRegs[$A] + $B) -eq $afterRegs[$C]) { $possibleOps += "addi" }
 
-		if ($beforeRegs[$A] * $beforeRegs[$B] -eq $afterRegs[$C]) { $possibleOps += "mulr" }
-		if ($beforeRegs[$A] * $B -eq $afterRegs[$C]) { $possibleOps += "muli" }
+		if ( ($beforeRegs[$A] * $beforeRegs[$B]) -eq $afterRegs[$C]) { $possibleOps += "mulr" }
+		if ( ($beforeRegs[$A] * $B) -eq $afterRegs[$C]) { $possibleOps += "muli" }
 	
 		if (($beforeRegs[$A] -band $beforeRegs[$B]) -eq $afterRegs[$C]) { $possibleOps += "banr" }
 		if (($beforeRegs[$A] -band $B) -eq $afterRegs[$C]) { $possibleOps += "bani" }
@@ -35,9 +35,9 @@ function Solution {
 			if (([int]($beforeRegs[$A] -gt $B)) -eq $afterRegs[$C]) { $possibleOps += "gtri" }
 			if (([int]($beforeRegs[$A] -gt $beforeRegs[$B])) -eq $afterRegs[$C]) { $possibleOps += "gtrr" }
 		
-			if (([int]($A -gt $beforeRegs[$B])) -eq $afterRegs[$C]) { $possibleOps += "eqir" }
-			if (([int]($beforeRegs[$A] -gt $B)) -eq $afterRegs[$C]) { $possibleOps += "eqri" }
-			if (([int]($beforeRegs[$A] -gt $beforeRegs[$B])) -eq $afterRegs[$C]) { $possibleOps += "eqrr" }
+			if (([int]($A -eq $beforeRegs[$B])) -eq $afterRegs[$C]) { $possibleOps += "eqir" }
+			if (([int]($beforeRegs[$A] -eq $B)) -eq $afterRegs[$C]) { $possibleOps += "eqri" }
+			if (([int]($beforeRegs[$A] -eq $beforeRegs[$B])) -eq $afterRegs[$C]) { $possibleOps += "eqrr" }
 
 		}
 		if($possibleOps.Count -ge 3){
