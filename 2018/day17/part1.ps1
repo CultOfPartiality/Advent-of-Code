@@ -21,6 +21,10 @@ $minY = [int32]::MaxValue
 $maxY = [int32]::MinValue
 
 $clays = [System.Collections.ArrayList]@()
+$EMPTY = 0
+$FALLING = 1
+$WATER = 2
+$CLAY = 99
 
 foreach ($row in $data) {
     $xs, $ys = $row -split ", " | sort | % { $_.TrimStart("xy=") } | % { , ($_ -split "\.\." | % { [int]$_ }) }
@@ -43,26 +47,19 @@ $width = $maxX - $minX + 1 + 2
 $height = $maxY - $minY + 1 + 2
 
 $map = New-Object int[][] $height, $width
-foreach ($clay in $clays) {
-    $map[$clay[0] - $minY][$clay[1] - $minX + 1] = 99
+foreach ($claySpace in $clays) {
+    $map[$claySpace[0] - $minY][$claySpace[1] - $minX + 1] = $CLAY
 }
 
-
-#TODO: Launch into some sort of djkstras?
-
-
-
-
-exit
 function map-to-string {
     $string = ""
     foreach ($y in 0..($height - 1)) {
         $row = ""
         foreach ($x in 0..($width - 1)) {
             $row += switch($map[$y][$x]){
-                0 {"."}
-                1 {"|"}
-                2 {"~"}
+                $EMPTY {"."}
+                $FALLING {"|"}
+                $WATER {"~"}
                 Default{"#"}
             }
         }
@@ -70,6 +67,41 @@ function map-to-string {
     }
     $string
 }
+
+
+#TODO: Launch into some sort of djkstras?
+
+$well = [PSCustomObject]@{
+    x = 500 - $minX + 1
+    y = 0
+}
+$map[$well.y][$well.x] = $FALLING
+
+$searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
+
+$searchSpace.Enqueue($well,$well.y)
+
+while($searchSpace.Count){
+    $ptr = $searchSpace.Dequeue()
+    $nextPtr = $ptr.psobject.Copy()
+
+    #Check below
+    switch ($map[$ptr.y+1][$ptr.x]) {
+        $EMPTY { 
+            $nextPtr.y += 1
+            $map[$nextPtr.y][$nextPtr.x] = $FALLING
+            $searchSpace.Enqueue($nextPtr,$nextPtr.y)
+        }
+        $CLAY { 
+            #Try to spread
+        }
+        Default {}
+    }
+}
+map-to-string
+
+
+exit
 map-to-string | Out-File  "$PSScriptRoot\DebugMap.txt"
 
 #}
