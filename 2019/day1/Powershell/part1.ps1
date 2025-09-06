@@ -7,7 +7,7 @@
 function Solution {
     param ($Path)
     
-    get-content $Path | % { [math]::Floor($_ / 3) - 2 } | Measure-Object -Sum | Select -ExpandProperty Sum
+    get-content $Path | % { [math]::Floor($_ / 3) - 2 } | Sum-Array
     
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test1.txt" 34241

@@ -17,7 +17,7 @@ function Solution {
             $fuelTotal += [math]::Max($fuel,0)
         }
         $fuelTotal
-    } | Measure-Object -Sum | Select -ExpandProperty Sum
+    } | Sum-Array
     
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test1.txt" 51316
