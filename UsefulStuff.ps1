@@ -156,8 +156,23 @@ function Sum-Array {
 	# Get the array from the pipeline, as an actual array and not unrolled
 	if( $input ){
 		$Array = $input
-   }
+   	}
 
 	($Array | Measure-Object -Sum).Sum
+}
 
+# Calculate the manhattan distance for the received array 
+function Manhattan-Distance {
+
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, ValueFromPipeline)] $Array
+	)
+
+	# Get the array from the pipeline, as an actual array and not unrolled
+	if( $input ){
+		$Array = $input
+   	}
+
+	($Array | %{[Math]::Abs($_)} | Measure-Object -Sum).Sum
 }
