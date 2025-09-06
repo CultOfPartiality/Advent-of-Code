@@ -10,6 +10,7 @@ function Solution {
     $wires = get-content $Path | % { , ($_ -split ",") }
 
     $Steps = @{}
+    $Intersections = @()
     $bit = 1 #Each round sets a bit, to avoid counting self intersections
     foreach ($wire in $wires) {
         $coords = 0, 0 # Y,X, +ve is up and to the right
@@ -21,18 +22,15 @@ function Solution {
                     "R" { $coords[1]++ }
                     "L" { $coords[1]-- }
                 }
-                $hash = "$($coords[0]),$($coords[1])"
+                $hash = "$($coords[0]),$($coords[1])" #HOTSPOT?
                 $Steps[$hash] = $Steps[$hash] -bor $bit
+                if($Steps[$hash] -eq 3){ $Intersections += $coords | Manhattan-Distance }
             }
         }
         $bit *= 2
     }
 
-    $Intersections = $Steps.GetEnumerator() | ?{ $_.Value -eq 3 } | select -ExpandProperty Key
-    $Distances = $Intersections | % { [int[]]($_ -split ",") | Manhattan-Distance } | Sort-Object -Descending
-    $Distances[-1]
-
-
+    ($Intersections | Sort-Object)[0]
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 6
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 159
