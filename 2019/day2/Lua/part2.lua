@@ -11,7 +11,8 @@ Computer = {
 			elseif currentInstruction == 2 then self:mul()
 			end
 		until currentInstruction == 99
-		return self.memory[1]
+
+        return self.memory[1]
 	end,
 
 	add = function (self)
@@ -35,30 +36,46 @@ function Computer:new()
 	local o = {}
 	setmetatable(o,self)
 	self.__index = self
-	self.memory = {}
-	self.instructionPointer = 1
+	-- self.memory = {}
+	-- self.instructionPointer = 1
 	return o
 end
 
-local function part1(fileName)
+function Copy(obj, seen)
+        if type(obj) ~= 'table' then return obj end
+        if seen and seen[obj] then return seen[obj] end
+        local s = seen or {}
+        local res = setmetatable({}, getmetatable(obj))
+        s[obj] = res
+        for k, v in pairs(obj) do res[Copy(k, s)] = Copy(v, s) end
+        return res
+    end
+
+local function part2(fileName)
 	
-	local comp = Computer:new()
+	local compTemplate = Computer:new()
 	for line in io.lines(Script_path() .. fileName) do
 		for val in line:gmatch("%d+") do
-			comp.memory[#comp.memory+1] = tonumber(val)
+			compTemplate.memory[#compTemplate.memory+1] = tonumber(val)
 		end
 	end
 
-	if fileName == "../input.txt" then
-		comp.memory[2] = 12
-		comp.memory[3] = 2
-	end
-	
-	return comp:run()
+
+    for noun = 0,99 do
+        for verb = 0,99 do
+            local comp = Computer:new()
+            comp.memory = Copy(compTemplate.memory)
+            -- local comp = Copy(compTemplate) -- Can't get this working, there's still some pointer?
+            comp.memory[2] = noun
+	        comp.memory[3] = verb
+            if comp:run() == 19690720 then
+                return 100*noun + verb
+            end
+        end
+    end
 end
 
-UnitTest(part1, "../testcases/test1.txt", 3500)
-UnitTest(part1, "../input.txt", 7594646)
+UnitTest(part2, "../input.txt", 3376)
 
-local result = part1("../input.txt")
-print("Part 1: " .. tostring(result))
+local result = part2("../input.txt")
+print("Part 2: " .. tostring(result))
