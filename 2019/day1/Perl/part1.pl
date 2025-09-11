@@ -5,9 +5,7 @@ use Path::Tiny;
 use Carp::Assert;
 use POSIX 'floor';
 
-my $dir = path("..");
-my $file = $dir->child("input.txt");
-my $file_handle = $file->openr_utf8();
+my $file_handle = path($0)->parent->parent->child("input.txt")->openr_utf8();
 
 my $total = 0;
 while( my $line = $file_handle->getline() ){
