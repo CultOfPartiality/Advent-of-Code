@@ -26,6 +26,8 @@ function Solution {
     $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
     $searchSpace.Enqueue('COM', 0)
     while ($searchSpace.Count) {
+        $planet = $null
+        $orbits = -1
         [void]$searchSpace.TryDequeue([ref]$planet, [ref]$orbits)
         foreach ($moon in $planets[$planet].Moons) {
             $planets[$moon].DistanceFromCOM = $orbits + 1

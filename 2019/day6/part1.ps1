@@ -17,6 +17,8 @@ function Solution {
     $totalOrbits = 0
     $searchSpace.Enqueue('COM', 0)
     while ($searchSpace.Count) {
+        $planet = $null
+        $orbits = -1
         [void]$searchSpace.TryDequeue([ref]$planet, [ref]$orbits)
         $orbiters = $planets[$planet]
         $orbits += 1
