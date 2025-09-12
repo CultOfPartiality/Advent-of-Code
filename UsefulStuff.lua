@@ -3,14 +3,17 @@ function Script_path()
 	return str:match("(.*[/\\])") or "./"
 end
 
-function UnitTest(func,args,answer)
-	result = func(args)
+function UnitTest(func,args,answer,realinput)
+	local startTime  = os.clock()
+	local result = func(args)
+	local timeTaken = string.format("%.3fs", os.clock() - startTime)
+	local message = realinput or "Unit test" 
 
 	if result ~= answer then
-		print("Unit test failed! Expected "..answer.." but got "..result)
+		print(message.." failed! Expected "..answer.." but got "..result)
 		assert(false,"Unit test failed")
 	else
-		print("Unit test passed")
+		print(message.." passed ("..timeTaken..")")
 	end
 end
 
