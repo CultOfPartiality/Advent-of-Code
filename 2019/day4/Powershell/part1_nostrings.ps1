@@ -1,8 +1,5 @@
-. "$PSScriptRoot\..\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\..\UsefulStuff.ps1"
-
-#The following line is for development
-$Path = "$PSScriptRoot/input.txt"
+. "$PSScriptRoot\..\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
 function OriginalSolution {
     param ($Path)
@@ -77,10 +74,10 @@ Run the test with:
 #>
 if($_profiler){
     write-host "New"
-    $result = NewSolution "$PSScriptRoot\input.txt"
+    $result = NewSolution "$PSScriptRoot/../input.txt"
 }
 else{
     write-host "Old"
-    $result = OriginalSolution "$PSScriptRoot\input.txt"
+    $result = OriginalSolution "$PSScriptRoot/../input.txt"
 }
 

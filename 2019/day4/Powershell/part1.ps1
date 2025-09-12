@@ -1,8 +1,5 @@
-. "$PSScriptRoot\..\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\..\UsefulStuff.ps1"
-
-#The following line is for development
-$Path = "$PSScriptRoot/input.txt"
+. "$PSScriptRoot\..\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
 function Solution {
     param ($Path)
@@ -33,6 +30,6 @@ function Solution {
 
 }
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+$measuredTime = measure-command { $result = Solution "$PSScriptRoot/../input.txt" }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
