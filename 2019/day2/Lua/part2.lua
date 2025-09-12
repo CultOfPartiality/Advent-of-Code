@@ -75,7 +75,4 @@ local function part2(fileName)
     end
 end
 
-UnitTest(part2, "../input.txt", 3376)
-
-local result = part2("../input.txt")
-print("Part 2: " .. tostring(result))
+UnitTest(part2, "../input.txt", 3376, "Part 2")
