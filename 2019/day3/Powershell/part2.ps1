@@ -1,8 +1,5 @@
-. "$PSScriptRoot\..\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\..\UsefulStuff.ps1"
-
-#The following line is for development
-$Path = "$PSScriptRoot/testcases/test1.txt"
+. "$PSScriptRoot\..\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
 function Solution {
     param ($Path)
@@ -37,9 +34,9 @@ function Solution {
 
     ($Intersections | Sort-Object)[0]
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 30
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 610
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test3.txt" 410
-$measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
+Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test1.txt" 30
+Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test2.txt" 610
+Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test3.txt" 410
+$measuredTime = measure-command {$result = Solution "$PSScriptRoot/../input.txt"}
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
