@@ -26,12 +26,10 @@ function Solution {
     $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
     $searchSpace.Enqueue($planets['COM'], 0)
     while ($searchSpace.Count) {
-        $planet = $null
-        $orbits = -1
-        [void]$searchSpace.TryDequeue([ref]$planet, [ref]$orbits)
+        $planet = $searchSpace.Dequeue()
         foreach ($moon in $planet.Moons) {
-            $moon.DistanceFromCOM = $orbits + 1
-            $searchSpace.Enqueue($moon, $orbits + 1)
+            $moon.DistanceFromCOM = $planet.DistanceFromCOM + 1
+            $searchSpace.Enqueue($moon, $moon.DistanceFromCOM)
         }
     }
 
@@ -45,7 +43,6 @@ function Solution {
         $transfers++
     }
     $transfers
-
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 4
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
