@@ -1,4 +1,4 @@
-# For the int computer build up and reused this year
+# For the IntCode computer build up and reused this year
 class Computer {
 	$memory
 	$progPointer = 0

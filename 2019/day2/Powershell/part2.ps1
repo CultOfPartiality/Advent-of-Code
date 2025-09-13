@@ -1,8 +1,8 @@
 . "$PSScriptRoot\..\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
-# Reused int computer this year
-. "$PSScriptRoot\..\..\intComp.ps1"
+# Reused IntCode computer this year
+. "$PSScriptRoot\..\..\IntCodeComputer.ps1"
 
 
 function Solution {
