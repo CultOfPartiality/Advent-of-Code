@@ -14,32 +14,34 @@ function Solution {
             if (!$planets.ContainsKey($body)) {
                 $planets[$body] = [PSCustomObject]@{
                     Moons           = @()
-                    Orbits          = ''
+                    Orbits          = $null
                     DistanceFromCOM = 0
                 }
             }
         }
-        $planets[$planet].Moons += @($moon)
-        $planets[$moon].Orbits = $planet
+        $planets[$planet].Moons += @($planets[$moon])
+        $planets[$moon].Orbits = $planets[$planet]
     }
 
     $searchSpace = New-Object 'System.Collections.Generic.PriorityQueue[psobject,int32]'
-    $searchSpace.Enqueue('COM', 0)
+    $searchSpace.Enqueue($planets['COM'], 0)
     while ($searchSpace.Count) {
         $planet = $null
         $orbits = -1
         [void]$searchSpace.TryDequeue([ref]$planet, [ref]$orbits)
-        foreach ($moon in $planets[$planet].Moons) {
-            $planets[$moon].DistanceFromCOM = $orbits + 1
+        foreach ($moon in $planet.Moons) {
+            $moon.DistanceFromCOM = $orbits + 1
             $searchSpace.Enqueue($moon, $orbits + 1)
         }
     }
 
     $transfers = 0
-    while ($planets['YOU'].Orbits -ne $planets['SAN'].Orbits) {
-        $furthest = $planets['YOU'].DistanceFromCOM -gt $planets['SAN'].DistanceFromCOM ? 'YOU' : 'SAN'
-        $planets[$furthest].DistanceFromCOM--
-        $planets[$furthest].Orbits = $planets[$planets[$furthest].Orbits].Orbits
+    $you = $planets['YOU']
+    $santa = $planets['SAN']
+    while ($you.Orbits -ne $santa.Orbits) {
+        $furthest = $you.DistanceFromCOM -gt $santa.DistanceFromCOM ? $you : $santa
+        $furthest.DistanceFromCOM--
+        $furthest.Orbits = $furthest.Orbits.Orbits
         $transfers++
     }
     $transfers
