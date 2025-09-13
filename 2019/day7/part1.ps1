@@ -16,7 +16,7 @@ function Solution {
 	foreach($perm in $possibleSettings){
 		$inputSignal = 0
 		foreach ($amp in 0..4) {
-			$Comp = [Computer]::New($memory.Clone())
+			$Comp = [Computer]::New($memory)
 			$Comp.RunComputer($perm[$amp])
 			$Comp.RunComputer($inputSignal)
 			$inputSignal = $Comp.outputSignal

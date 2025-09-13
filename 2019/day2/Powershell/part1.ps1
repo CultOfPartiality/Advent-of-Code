@@ -1,32 +1,22 @@
 . "$PSScriptRoot\..\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
-#The following line is for development
-$Path = "$PSScriptRoot/../testcases/test1.txt"
+# Reused int computer this year
+. "$PSScriptRoot\..\..\intComp.ps1"
+
 
 function Solution {
     param ($Path)
 
-
-    $data = (get-content $Path) -split ',' | % { [int]$_ } 
-
+    $data = (get-content $Path) -split ',' | % { [int]$_ }
     if ($Path -match "input.txt") {
         $data[1] = 12
         $data[2] = 2
     }
 
-    $index = 0
-    while ($data[$index] -ne 99) {
-        $indexes = $data[($index + 1)..($index + 3)]
-        if ($data[$index] -eq 1) {
-            $data[$indexes[2]] = $data[$indexes[0]] + $data[$indexes[1]]
-        }
-        elseif ($data[$index] -eq 2) {
-            $data[$indexes[2]] = $data[$indexes[0]] * $data[$indexes[1]]
-        }
-        $index += 4
-    }
-    $data[0]
+    $Comp = [Computer]::New($data)
+    $Comp.RunComputer($null)
+    $Comp.memory[0]
 
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test1.txt" 3500

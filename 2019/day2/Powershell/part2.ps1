@@ -1,38 +1,22 @@
 . "$PSScriptRoot\..\..\..\Unit-Test.ps1"
 . "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
-#The following line is for development
-$Path = "$PSScriptRoot/../testcases/test1.txt"
+# Reused int computer this year
+. "$PSScriptRoot\..\..\intComp.ps1"
+
 
 function Solution {
     param ($Path)
 
     $originalMemory = (get-content $Path) -split ',' | % { [int]$_ } 
-
-    function RunComputer{
-        param($data,$Noun,$Verb)
-        
-        $data[1] = $Noun
-        $data[2] = $Verb
-
-        $index = 0
-        while ($data[$index] -ne 99) {
-            $indexes = $data[($index + 1)..($index + 3)]
-            if ($data[$index] -eq 1) {
-                $data[$indexes[2]] = $data[$indexes[0]] + $data[$indexes[1]]
-            }
-            elseif ($data[$index] -eq 2) {
-                $data[$indexes[2]] = $data[$indexes[0]] * $data[$indexes[1]]
-            }
-            $index += 4
-        }
-        $data[0]
-    }
     
     foreach ($noun in 0..99) {
         foreach ($verb in 0..99) {
-            $val = RunComputer -data $originalMemory.Clone() -Noun $noun -Verb $verb
-            if($val -eq 19690720){
+            $Comp = [Computer]::New($originalMemory)
+            $Comp.memory[1] = $noun
+            $Comp.memory[2] = $verb
+            $Comp.RunComputer($null)
+            if($Comp.memory[0] -eq 19690720){
                 return 100*$noun + $verb
             }
         }
