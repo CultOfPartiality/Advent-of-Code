@@ -27,13 +27,17 @@ class Coords : System.ICloneable {
         return [Coords]::new( ($first.row + $second.row), ($first.col + $second.col) )
     }
 
-    # Allow addition of an array
+    # Allow addition with an array
     static [Coords] op_Addition ([Coords]$first, [Array]$second) {
         return [Coords]::new( ($first.row + $second[0]), ($first.col + $second[1]) )
     }
 
     static [Coords] op_Subtraction ([Coords]$first, [Coords]$second) {
         return [Coords]::new( ($first.row - $second.row), ($first.col - $second.col) )
+    }
+
+    static [Coords] op_Multiply ([Coords]$first, [Array]$second) {
+        return [Coords]::new( ($first.row * $second[0]), ($first.col * $second[1]) )
     }
 
     #Manhattan distance to other coord
@@ -56,7 +60,6 @@ class Coords : System.ICloneable {
     [int] OneDimIndex($colCount) {
         return ($this.row*$colCount + $this.col)
     }
-
 
     #Return as an array, for using and a 2D array index
     [array] Array() {
