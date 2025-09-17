@@ -64,7 +64,12 @@ function Solution {
 			while ($true) {
 				$delta.row += $direction.row
 				$delta.col += $direction.col
-				if (!$delta.Contained($height, $width)) { break } # Our biggest hotspot
+				# The below halves the run time, I'm assuming because we exit early?
+				if ( ($delta.row -ge $height) -or
+					 ($delta.row -lt 0) -or
+					 ($delta.col -ge $width) -or
+					 ($delta.col -lt 0) ) { break }
+				
 				if ($asteroids.ContainsKey($delta.Hash($width))) {
 					# write-host "  Can see $($delta.Hash())"
 					$AsteroidsSeen++

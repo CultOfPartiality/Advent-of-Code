@@ -8,6 +8,7 @@ $Path = "$PSScriptRoot/testcases/test5.txt"
 function Solution {
 	param ($Path)
 
+	write-host "`nWorking out directions..."
 	# Parse data
 	$data = get-content $Path
 	$width = $data[0].length
@@ -62,6 +63,7 @@ function Solution {
 	}
 
 	# Walk each direction, looking until we hit an asteroid or out of bounds, to find the best asteroid for the station
+	write-host "Working out best asteroid..."
 	$bestAsteroid = [PSCustomObject]@{ Coords = $null; AsteroidsSeen = 0 }
 	$delta = [coords]::New(0, 0) # Cloning is very slow
 	foreach ($asteroid in $asteroids.Values) {
@@ -73,7 +75,13 @@ function Solution {
 			while ($true) {
 				$delta.row += $direction.row
 				$delta.col += $direction.col
-				if (!$delta.Contained($height, $width)) { break } # Our biggest hotspot
+				# The below halves the run time, I'm assuming because we exit early?
+				# if (!$delta.Contained($height, $width)) { break }
+				if ( $delta.row -ge $height -or
+					 $delta.row -lt 0 -or
+					 $delta.col -ge $width -or
+					 $delta.col -lt 0) { break }
+
 				if ($asteroids.ContainsKey($delta.Hash($width))) {
 					# write-host "  Can see $($delta.Hash())"
 					$AsteroidsSeen++
@@ -88,6 +96,7 @@ function Solution {
 		}
 	}
 
+	write-host "Vaporising..."
 	# Loop over the directions in order, vaporising asteroids until we hit asteroid 200
 	$dirIndex = 0
 	$asteroidsVaporised = 0
@@ -103,7 +112,7 @@ function Solution {
 			$delta.col += $direction.col
 			if (!$delta.Contained($height, $width)) { break } # Our biggest hotspot #TODO remove directions once we know they're all used up?
 			if ($asteroids.ContainsKey($delta.Hash($width))) {
-				write-host "Asteroid #$($asteroidsVaporised+1) varporised @ $($asteroids[$delta.Hash($width)].hash())"
+				# write-host "Asteroid #$($asteroidsVaporised+1) varporised @ $($asteroids[$delta.Hash($width)].hash())"
 				$asteroidsVaporised++
 				break
 			}
@@ -115,5 +124,5 @@ function Solution {
 
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test5.txt" 802
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" } #276
+$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" } #1321
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
