@@ -47,18 +47,20 @@ class Coords : System.ICloneable {
     }
     
     #An int to use as a hash value, using the width to generate a unique number
+    #This is actually the same as the 1D array index below
     [int] Hash($width) {
         return $this.row * $width + $this.col
     }
+    
+    #The index in a 1D array
+    [int] OneDimIndex($colCount) {
+        return ($this.row*$colCount + $this.col)
+    }
+
 
     #Return as an array, for using and a 2D array index
     [array] Array() {
         return @($this.row,$this.col)
-    }
-
-    #The index in a 1D array
-    [int] OneDimIndex($colCount) {
-        return ($this.row*$colCount + $this.col)
     }
 
     #Check if a coord is with a rectangle, starting from 0,0
