@@ -1,6 +1,6 @@
 $orthDeltas = (-1,0),(0,-1),(0,1),(1,0)
 
-class Coords {
+class Coords : System.ICloneable {
 
     $row
     $col
@@ -13,6 +13,10 @@ class Coords {
     Coords([array]$array_row_col) {
         $this.row = $array_row_col[0]
         $this.col = $array_row_col[1]
+    }
+
+    [Object] Clone() {
+        return $this.MemberwiseClone()
     }
 
     [boolean] Equals($otherCoord) {
@@ -40,6 +44,11 @@ class Coords {
     #A string to use as a hash value, in the form "row,col"
     [string] Hash() {
         return "$($this.row),$($this.col)"
+    }
+    
+    #An int to use as a hash value, using the width to generate a unique number
+    [int] Hash($width) {
+        return $this.row * $width + $this.col
     }
 
     #Return as an array, for using and a 2D array index
