@@ -56,6 +56,7 @@ class Computer {
 			elseif ($op -eq 3) {
 				#Input
 				$param1 = switch ($param1Mode) {
+					0 { $indexes[0] }
 					1 { $indexes[0] }
 					2 { $indexes[0] + $this.relativeBase }
 				}
