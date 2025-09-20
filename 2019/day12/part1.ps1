@@ -55,7 +55,7 @@ function Solution {
 	$total
 
 }
-Unit-Test  ${function:Solution} @{ Path="$PSScriptRoot/testcases/test1.txt"; Steps=100 } 1940
+Unit-Test  ${function:Solution} @{ Path="$PSScriptRoot/testcases/test2.txt"; Steps=100 } 1940
 $measuredTime = measure-command { $result = Solution @{ Path="$PSScriptRoot\input.txt"; Steps=1000 } }
 Write-Host "Part 1: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
