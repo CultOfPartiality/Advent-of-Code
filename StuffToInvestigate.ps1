@@ -11,3 +11,13 @@ $counter = [pscustomobject] @{ Value = 0 }
 $groupSize = 100
 
 $groups = $bigList | Group-Object -Property { [math]::Floor($counter.Value++ / $groupSize) }
+
+
+# Array comparisons. Performance?
+[Collections.Generic.SortedSet[String]]::CreateSetComparer().Equals($a,$b)
+
+#LINQ?
+# https://learn.microsoft.com/en-us/dotnet/csharp/linq/
+
+#Hashset class?
+# https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1?view=net-9.0
