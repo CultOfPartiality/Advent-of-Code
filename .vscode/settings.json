@@ -1,5 +1,5 @@
 {
     "git.autofetch": true,
-    "powershell.debugging.createTemporaryIntegratedConsole": false
+    "powershell.debugging.createTemporaryIntegratedConsole": true
     
 }
