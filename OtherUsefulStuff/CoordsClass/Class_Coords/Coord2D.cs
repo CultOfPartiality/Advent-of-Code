@@ -62,6 +62,16 @@ namespace Coord2D
         {
             return new Coord((lhs.row * rhs[0]), (lhs.col * rhs[1]));
         }
+        public bool Contained(int rowcount, int colcount)
+        {
+            return this.row >= 0 &&
+                   this.row < rowcount &&
+                   this.col >= 0 &&
+                   this.col < colcount;
+        }
+
+
+
     }
 
 
