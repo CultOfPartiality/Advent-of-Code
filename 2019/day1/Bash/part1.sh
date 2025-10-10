@@ -13,10 +13,10 @@ Solution(){
     # Need to remove carriage returns, then read each line into an array
     readarray -t lines < <( tr -d "\r" < $1)
     total=0
-    for index in "${!lines[@]}"; do
+    for index in ${!lines[@]}; do
         ((total+= (lines[$index]/3) - 2 ))
     done
-    echo "$total"
+    echo $total
 }
 
 unit-test Solution "$SCRIPT_DIR/../testcases/test1.txt" 34241
