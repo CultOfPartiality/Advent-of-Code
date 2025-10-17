@@ -105,7 +105,7 @@ function print-map{
         for ($x = 0; $x -lt $width; $x++) {
             $row += switch( $printMap[$x,$y] ){
                 ([Block]::Floor +10) {"."}
-                ([Block]::Wall  +10) {"#"}
+                ([Block]::Wall  +10) {"█"}
                 ([Block]::Oxygen+10) {"O"}
                 (99) {"D"}
                 default {" "}
