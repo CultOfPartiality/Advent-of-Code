@@ -12,7 +12,7 @@ function Solution {
     function FFT {
         param ($InputSignal)
         $BasePattern = 0, 1, 0, -1
-        $result = @()
+        $result = New-Object "int[]" $InputSignal.Count
     
         # For each digit in the input signal...
         for ($i = 0; $i -lt $InputSignal.Count; $i++) {
@@ -23,7 +23,7 @@ function Solution {
                 $PatternIndex = ($PatternIndex + 1) % $Pattern.Count
                 $tot += $InputSignal[$j] * $Pattern[$PatternIndex]
             }
-            $result += [Math]::ABS($tot % 10)
+            $result[$i] = [Math]::ABS($tot % 10)
         }
         $result
     }

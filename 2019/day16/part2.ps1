@@ -11,25 +11,24 @@ function Solution {
     $InputSignal_SecondHalf = $RealSignal*5000
     $MessageOffset = [int]($RealSignal[0..6] -join "")
     $MessageOffset_FromTheEnd = ($RealSignal.Count * 10000) - $MessageOffset
-    write-host "`nInput is $($RealSignal.Count) digits long"
-    write-host "Expanded input is $($RealSignal.Count * 10000) digits long"
-    write-host "Message offset is $MessageOffset"
+    # write-host "`nInput is $($RealSignal.Count) digits long"
+    # write-host "Expanded input is $($RealSignal.Count * 10000) digits long"
+    # write-host "Message offset is $MessageOffset"
 
     function FFT {
         param ($InputSignal_SecondHalf,$MessageOffset)
-        $result = @()
+        $result = New-Object "int[]" $MessageOffset
         $tot = 0
         for ($i = 0; $i -lt $MessageOffset; $i++) {
             $tot = ($tot + $InputSignal_SecondHalf[0-1-$i]) % 10
-            $result += $tot
+            $result[$MessageOffset-$i-1] = $tot
         }
-        [array]::Reverse($result)
         $result
     }
 
     1..100 | % {
         $InputSignal_SecondHalf = FFT -InputSignal $InputSignal_SecondHalf -MessageOffset $MessageOffset_FromTheEnd
-        write-host "Completed iteration $_"
+        # write-host "Completed iteration $_"
     }
 
     [int]($InputSignal_SecondHalf[0..7] -join "")
