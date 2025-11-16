@@ -19,7 +19,7 @@ class Computer {
 			write-host "Error, trying to run a completed computer"
 			exit
 		}
-		$inputCount = 0
+		$inputCount = $inputSignal -eq $null ? 1 : 0
 		while ($this.memory[$this.progPointer] % 100 -ne 99) {
 			$indexes = $this.memory[($this.progPointer + 1)..($this.progPointer + 3)]
 			$op = $this.memory[$this.progPointer] % 100
