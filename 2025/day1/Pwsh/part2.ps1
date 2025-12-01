@@ -1,12 +1,11 @@
-. "$PSScriptRoot\..\..\Unit-Test.ps1"
-. "$PSScriptRoot\..\..\UsefulStuff.ps1"
+. "$PSScriptRoot\..\..\..\Unit-Test.ps1"
+. "$PSScriptRoot\..\..\..\UsefulStuff.ps1"
 
 #The following line is for development
 $Path = "$PSScriptRoot/testcases/test1.txt"
 
 function Solution {
     param ($Path)
-
 
     $data = get-content $Path | % {
         $rotations = [int]$_.Substring(1)
@@ -24,12 +23,12 @@ function Solution {
             if($dial -eq 0){$zeros++}
             $rotation = $rotation - [Math]::Sign($rotation)
         }
-        write-host "Dial at $dial, zeros=$zeros"
+        # write-host "Dial at $dial, zeros=$zeros"
     }
     $zeros
 
 }
-Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 6
-$measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
+Unit-Test  ${function:Solution} "$PSScriptRoot/../testcases/test1.txt" 6
+$measuredTime = measure-command { $result = Solution "$PSScriptRoot/../input.txt" }
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
 
