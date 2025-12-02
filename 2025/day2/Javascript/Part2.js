@@ -4,11 +4,7 @@ const fs = require('fs');
 function part2(filepath) {
     InvalidTotal = 0
     fs.readFileSync(filepath, 'UTF8').toString().split(',').forEach(element => {
-        start = parseInt(element)
-        if (element.search("-"))
-            [start, end] = element.split("-").map(str => parseInt(str))
-        else
-            end = start
+        [start, end] = element.split("-").map(str => parseInt(str))
 
         for (let val = start; val <= end; val++) {
             if (val.toString().match(/^([1-9]\d*)(\1)+$/)) {
