@@ -12,23 +12,17 @@ function Solution {
 
 	function merge-ranges {
 		param($a, $b)
-		if ($a[0] -ge $b[0] -and $a[0] -le $b[1]) {
+		if( ($a[0] -ge $b[0] -and $a[0] -le $b[1]) -or 
 			# A   |----|  or     |-| 
 			# B |----|    or   |----|   
-			return @($b[0], [Math]::Max($a[1], $b[1]))
-		}
-		elseif ($a[1] -ge $b[0] -and $a[1] -le $b[1]) {
+			($a[1] -ge $b[0] -and $a[1] -le $b[1]) -or
 			# A |----|    or   |-| 
 			# B    |----| or  |---|
-			return @([Math]::Min($a[0], $b[0]), $b[1])
-		}
-		elseif ($a[0] -le $b[0] -and $a[1] -ge $b[1]) {
-			# A |-----|
-			# B   |-|
-			return $a
-		}
-		else {
-			return
+			($a[0] -le $b[0] -and $a[1] -ge $b[1])
+			# A |--------|
+			# B    |--|
+		){
+			return @([Math]::Min($a[0], $b[0]), [Math]::Max($a[1], $b[1]))
 		}
 	}
 	
