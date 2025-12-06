@@ -2,11 +2,16 @@ const { assert } = require('console');
 const fs = require('fs');
 
 function part1(filepath) {
-    total = 0
-    banks = fs.readFileSync(filepath, 'UTF8').toString().split('\n')
+    banks = fs.readFileSync(filepath, 'UTF8').toString()
+    .replaceAll(/\r\n/g,"\n").split('\n')
+    .map(x =>  x.split('').map(y => Number(y)))
     
-    banks.forEach(element => {
-        
+    total = 0
+    banks.forEach(bank => {
+        first = Math.max(...bank.slice(0,-2))
+        remaining = bank.slice(bank.indexOf(first)+1)
+        second = Math.max(...remaining)
+        total += first*10 + second
     });
     return total
 }
