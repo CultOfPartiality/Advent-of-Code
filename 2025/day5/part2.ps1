@@ -8,11 +8,12 @@ function Solution {
 	param ($Path)
 
 	$data = get-content $Path | ? { $_.Length -gt 0 }
-	$ranges = $data | ? { $_ -match "-" } | % { , @($_ -split "-" | % { [int64]$_ }) }
+	[System.Collections.ArrayList]$ranges = $data | ? { $_ -match "-" } | % { , @($_ -split "-" | % { [int64]$_ }) }
 
-	function merge-ranges {
+	function check-overlap{
 		param($a, $b)
-		if( ($a[0] -ge $b[0] -and $a[0] -le $b[1]) -or 
+		return (
+			($a[0] -ge $b[0] -and $a[0] -le $b[1]) -or 
 			# A   |----|  or     |-| 
 			# B |----|    or   |----|   
 			($a[1] -ge $b[0] -and $a[1] -le $b[1]) -or
@@ -21,32 +22,19 @@ function Solution {
 			($a[0] -le $b[0] -and $a[1] -ge $b[1])
 			# A |--------|
 			# B    |--|
-		){
-			return @([Math]::Min($a[0], $b[0]), [Math]::Max($a[1], $b[1]))
-		}
+		)
 	}
-	
+
 	do {
 		$merges = 0
-		$remainingRanges = $ranges.Clone()
-		$ranges = @()
-		foreach ($range in $remainingRanges) {
-			if ($ranges.Count -eq 0) {
-				$ranges += , $range
-				continue
-			}
-			$merged = $false
-			for ($i = 0; $i -lt $ranges.Count; $i++) {
-				$mergeResult = merge-ranges $range $ranges[$i]
-				if ($mergeResult) { 
-					$ranges[$i] = $mergeResult
-					$merged = $true
+		for ($i = 0; $i -lt $ranges.Count; $i++) {
+			for ($j = $i+1; $j -lt $ranges.Count; $j++) {
+				$r1,$r2 = $ranges[$i,$j]
+				if(check-overlap $r1 $r2){
+					$ranges[$i] = @([Math]::Min($r1[0], $r2[0]), [Math]::Max($r1[1], $r2[1]))
+					$ranges.RemoveAt($j)
 					$merges++
-					break
 				}
-			}
-			if (!$merged) {
-				$ranges += ,$range
 			}
 		}
 	}while($merges -gt 0)
