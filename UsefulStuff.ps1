@@ -161,6 +161,30 @@ function Sum-Array {
 	($Array | Measure-Object -Sum).Sum
 }
 
+function Multiply-Array {
+
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, ValueFromPipeline)] $Array
+	)
+
+	# Get the array from the pipeline, as an actual array and not unrolled
+	if( $input ){
+		$Array = $input
+   	}
+
+	if($Array.Count -eq 1){
+		$Array[0]
+	}
+	else{
+		[int64]$acc = $Array[0]
+		for ($i = 1; $i -lt $Array.Count; $i++) {
+			$acc *= $Array[$i]
+		}
+		$acc
+	}
+}
+
 # Calculate the manhattan distance for the received array 
 function Manhattan-Distance {
 
