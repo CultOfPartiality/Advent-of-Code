@@ -10,7 +10,6 @@ $Path = "$PSScriptRoot/testcases/test1.txt"
 $machines = get-content $Path | % {
     $blocks = $_ -split " "
     $Buttons = $blocks[1..($blocks.Count - 2)] | % {
-        #Convert them to toggle masks
         , ($_ -replace "[\(\)]", "" -split "," | % { [int]$_ })
     }
     $Joltages = $blocks[-1] -replace "[\{\}]", "" -split "," | % { [int]$_ }

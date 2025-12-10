@@ -26,6 +26,7 @@ function Solution {
         # $machine = $machines[0]
         write-host "Working on machine $line"
         $line++
+        $totalRequired = $machine.Counters | sum-array
         $state = [PSCustomObject]@{
             Counters       = @(0) * $machine.Counters.Count
             ButtonsPressed = 0
@@ -33,7 +34,7 @@ function Solution {
         $minimumPressesRequired = [int32]::MaxValue
         $searchSpace = New-Object "System.Collections.Generic.PriorityQueue[psobject,int]"
         # $searchSpace = New-Object "System.Collections.Generic.Stack[psobject]"
-        $searchSpace.Enqueue($state, $state.ButtonsPressed)
+        $searchSpace.Enqueue($state, $totalRequired)
         # $searchSpace.Push($state)
         $statesSeen = @{} #and min buttons to get here
         while ($searchSpace.Count) {
@@ -58,7 +59,7 @@ function Solution {
                     $hash = $newState.Counters -join ","
                     if (!$statesSeen.ContainsKey($hash) -or ($newState.ButtonsPressed -lt $statesSeen[$hash])) {
                         $statesSeen[$hash] = $newState.ButtonsPressed
-                        $searchSpace.Enqueue($newState, $newState.ButtonsPressed)
+                        $searchSpace.Enqueue($newState, $totalRequired - ($newState.Counters | sum-array))
                         # $searchSpace.Push($newState)
                     }
                 }
