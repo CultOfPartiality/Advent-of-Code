@@ -8,155 +8,81 @@ $Path = "$PSScriptRoot/input.txt"
 function Solution {
     param ($Path)
 
+    # Parse server information, and build linked graph
     $Servers = @{}
     get-content $Path | % {
         $split = $_ -replace ":", "" -split " "
         $Servers[$split[0]] = [PSCustomObject]@{
             Name               = $split[0]
-            ConnectionNames    = [array]($split | select -Skip 1)
-            ConnectionsTo      = @()
+            ConnectedToNames   = [array]($split | select -Skip 1)
             ConnectedFromNames = @()
-            ConnectedFrom      = @()
-            JumpsFromDac       = 0
-            PathsFromDac = 0
+            PathsToHere        = 0
+            rank               = 0
         }
     }
     $Servers["out"] = [PSCustomObject]@{
         Name               = "out"
-        ConnectionNames    = @()
-        ConnectionsTo      = @()
+        ConnectedToNames   = @()
         ConnectedFromNames = @()
-        ConnectedFrom      = @()
+        PathsToHere        = 0
+        rank               = 0
     }
-    # $graph = ""
     foreach ($server in $Servers.Values) {
-        foreach ($ConnectionName in $server.ConnectionNames) {
-            $server.ConnectionsTo += $Servers[$ConnectionName]
+        foreach ($ConnectionName in $server.ConnectedToNames) {
             $Servers[$ConnectionName].ConnectedFromNames += $server.Name
-            $Servers[$ConnectionName].ConnectedFrom += $server
-            # $graph += "`t$($server.Name) -> $ConnectionName;`n"
         }
     }
 
-    # "digraph G{
-    # `n"+
-    # ($graph -join "`n") +
-    # "	{}"+
-    # "}" | Out-File -FilePath "$PSScriptRoot\vis.dot"
-
-    # dot -Tsvg "$PSScriptRoot\vis.dot" -o "$PSScriptRoot\vis.svg"
-    # exit
-
-
-    # From inspection, the path needs to hit fft first, then dac, then out
-    # Looks like there are no loops
-
-
-    # Actually walk this one in reverse
-    $svr_to_fft = 0
-    $mostJumps = 10
-    $searchSpace = new-object 'System.Collections.Queue'
-    $searchSpace.Enqueue(
-        [PSCustomObject]@{
-            CurrentNode = "fft"
-            Jumps       = 0
-        })
-    while ($searchSpace.Count) {
-        $state = $searchSpace.Dequeue()
-        foreach ($nextStep in $Servers[$state.CurrentNode].ConnectedFromNames) {
-            if ($nextStep -eq "svr") {
-                $svr_to_fft++
+    # Work out the rank of each server, so we can evaluate them in order when required to avoid order-of-operations issues
+    $Servers['svr'].Rank = 1
+    $candidateList = $Servers['svr'].ConnectedToNames
+    while ($candidateList.Count) {
+        $nextCandidates = @()
+        foreach ($candidate in ($candidateList | % { $Servers[$_] }) ) {
+            $previousRanks = ($candidate.ConnectedFromNames | % { $Servers[$_].rank })
+            if ( $previousRanks -contains 0) {
+                $nextCandidates += $candidate.Name
                 continue
             }
-            $nextState = [PSCustomObject]@{
-                CurrentNode = $nextStep
-                Jumps       = $state.Jumps + 1
-            }
-            if ($nextState.Jumps -ge $mostJumps) { continue }
-            $searchSpace.Enqueue($nextState)
+            $candidate.rank = ($previousRanks | measure -Maximum).Maximum + 1
+            $nextCandidates += $candidate.ConnectedToNames
         }
-    }
-    write-host "$svr_to_fft distinct paths between svr and fft"
-
-    # Lower third down to the end
-    $dac_to_out = 0
-    $searchSpace = new-object 'System.Collections.Queue'
-    $searchSpace.Enqueue(
-        [PSCustomObject]@{
-            CurrentNode = "dac"
-            Jumps       = 0
-        })
-    while ($searchSpace.Count) {
-        $state = $searchSpace.Dequeue()
-        foreach ($nextStep in $Servers[$state.CurrentNode].ConnectionNames) {
-            if ($nextStep -eq "out") {
-                $dac_to_out++
-                continue
-            }
-            $nextState = [PSCustomObject]@{
-                CurrentNode = $nextStep
-                Jumps       = $state.Jumps + 1
-            }
-            $searchSpace.Enqueue($nextState)
-        }
-    }
-    write-host "$dac_to_out distinct paths between dac and out"
-
-    # And finally the messy middle.........
-    # First set the JumpsFromDac for relevant entries
-    $mostJumps = 19
-    $searchSpace = new-object 'System.Collections.Stack'
-    $searchSpace.Push(
-        [PSCustomObject]@{
-            CurrentNode = "dac"
-            Jumps       = 0
-        })
-    while ($searchSpace.Count) {
-        $state = $searchSpace.Pop()
-        foreach ($nextStep in $Servers[$state.CurrentNode].ConnectedFromNames) {
-            if($Servers[$nextStep].JumpsFromDac -gt $state.Jumps){continue}
-            $nextState = [PSCustomObject]@{
-                CurrentNode = $nextStep
-                Jumps       = $state.Jumps + 1
-            }
-            $Servers[$nextStep].JumpsFromDac = $nextState.Jumps
-            if ($nextState.Jumps -gt $mostJumps) { continue }
-            $searchSpace.Push($nextState)
-        }
+        $candidateList = $nextCandidates | select -Unique
     }
 
-
-    $fft_to_dac = 0
-    $mostJumps = 19
-    $searchSpace = new-object 'System.Collections.Queue'
-    $searchSpace.Enqueue(
-        [PSCustomObject]@{
-            CurrentNode = "fft"
-            Jumps       = 0
-        })
-    while ($searchSpace.Count) {
-        $state = $searchSpace.Dequeue()
-        foreach ($nextStep in $Servers[$state.CurrentNode].ConnectionNames) {
-            if ($nextStep -eq "dac") {
-                $fft_to_dac++
-                continue
-            }
-            $nextState = [PSCustomObject]@{
-                CurrentNode = $nextStep
-                Jumps       = $state.Jumps + 1
-            }
-            if ($nextState.Jumps -gt $mostJumps) { continue }
-            $searchSpace.Enqueue($nextState)
+    # From inspection, we need to go from svr to fft, then to dac, then to out
+    # For each leg, calculate the number of paths to get from the start to the end
+    # Once we know all three, thier product is the total possible paths that hit all three
+    @('svr', 'fft'), @('fft', 'dac'), @('dac', 'out') | % {
+        $from, $to = $_
+        #Reset the possible path counts
+        foreach ($server in $Servers.Values) {
+            $Server.PathsToHere = 0
         }
-    }
-    write-host "$fft_to_dac distinct paths between fft and dac"
-
-
-
-    $svr_to_fft * $fft_to_dac * $dac_to_out
+        $Servers[$from].PathsToHere = 1
+        # We consider nodes based on rank, so we can guarentee we've always calculated the paths to previous nodes
+        $candidateList = $Servers[$from].ConnectedToNames | sort { $servers[$_].Rank } 
+        while ($candidateList.Count) {
+            $nextCandidates = @()
+            foreach ($candidate in ($candidateList | % { $Servers[$_] }) ) {
+                # Add up the possible paths from each node that leads to here. If they're not from the 
+                # start node in question, they'll be 0 so they won't matter
+                $nodesPathsHere = ($candidate.ConnectedFromNames | % { $Servers[$_].PathsToHere })
+                $candidate.PathsToHere = $nodesPathsHere | sum-array
+                if ($candidate.Name -eq $to) {
+                    #We've found the node in question; time to bail
+                    $nextCandidates = @()
+                    break
+                }
+                # Add the next nodes from this one to the list
+                $nextCandidates += $candidate.ConnectedToNames
+            }
+            $candidateList = $nextCandidates | select -Unique | sort { $servers[$_].Rank } 
+        }
+        write-host "$from to $to had $($candidate.PathsToHere) unique paths"
+        $candidate.PathsToHere
+    } | multiply-array
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test2.txt" 2
 $measuredTime = measure-command { $result = Solution "$PSScriptRoot\input.txt" }
 Write-Host "Part 2: $result`nExecution took $($measuredTime.TotalSeconds)s" -ForegroundColor Magenta
-
-#NOT 26
