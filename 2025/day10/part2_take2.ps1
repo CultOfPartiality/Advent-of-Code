@@ -39,10 +39,10 @@ function GaussJordan-Elimination {
         }
     }
 
-    #Debug
-    write-host "Initial matrix:"
-    $matrix | % { write-host ($_ -join ",") }
-    write-host
+    # #Debug
+    # write-host "Initial matrix:"
+    # $matrix | % { write-host ($_ -join ",") }
+    # write-host
 
 
     $row = 0
@@ -75,10 +75,10 @@ function GaussJordan-Elimination {
         # write-host
     }
 
-    #Debug
-    write-host "Reduced matrix:"
-    $matrix | % { write-host ($_ -join ",") }
-    write-host
+    # #Debug
+    # write-host "Reduced matrix:"
+    # $matrix | % { write-host ($_ -join ",") }
+    # write-host
 
 
     #Elements that are used are rows with a 1 in that place at the start
@@ -87,7 +87,7 @@ function GaussJordan-Elimination {
         $rowIndex = $_
         0..($matrix[0].count - 2) | ? { $matrix[$rowIndex][$_] -eq 1 } | select -first 1
     }
-    $freeElements = 0..($matrix[0].count - 2) | ? { $_ -notin $definedElements }
+    [array]$freeElements = 0..($matrix[0].count - 2) | ? { $_ -notin $definedElements }
 
     @($matrix, $definedElements, $freeElements)
 }
@@ -95,8 +95,10 @@ function GaussJordan-Elimination {
 
 function Sum-Matrix {
     param($matrixInput, $knownElements)
-    $matrix = $matrixInput.Clone()
-    
+    $matrix = foreach ($row in $matrixInput) {
+        , $row.Clone()
+    }
+
     #Rescale columns using "free" elements
     0..($matrix[0].count - 2) | ? { $knownElements[$_] -ne $null } | % {
         $col = $_
@@ -108,27 +110,69 @@ function Sum-Matrix {
     #Perform the summation
     foreach ($row in $matrix) {
         $index = 0..($matrix[0].count - 2) | ? { $row[$_] -eq 1 } | select -first 1
-        if($index -eq $null){continue}
+        if ($index -eq $null) { continue }
         $otherIndexes = $index -lt $matrix[0].count - 2 ? ($index + 1)..($matrix[0].count - 2) : $null
 
         $knownElements[$index] = $row[-1]
         foreach ($i in $otherIndexes) { $knownElements[$index] -= $row[$i] }
     }
-    return ($knownElements | sum-array)
+    $valid = ($knownElements -lt 0).count -eq 0
+    return @($valid, ($knownElements | sum-array))
 }
 
-$machine = $machines[1]
+$runningTotal = 0
+foreach ($machine in $machines) {
 
-$matrix, $definedElements, $freeElements = GaussJordan-Elimination $machine
-write-host ("Defined Elements: " + ($definedElements -join ","))
-write-host ("Free Elements: " + ($freeElements -join ","))
+    $matrix, $definedElements, $freeElements = GaussJordan-Elimination $machine
+    write-host ("Defined Elements: " + ($definedElements -join ","))
+    write-host ("Free Elements: " + ($freeElements -join ","))
 
-#TODO Need to optimise free elements, without another element turning out less than zero
-$knownElements = @($null) * ($matrix[0].Count - 1)
-$freeElements | % { $knownElements[$_] = 0 }
+    #TODO Need to optimise free elements, without another element turning out less than zero
+    $knownElements = @($null) * ($matrix[0].Count - 1)
+    $freeElements | % { $knownElements[$_] = 0 }
+    $valid, $total = Sum-Matrix -matrixInput $matrix -knownElements $knownElements
+    if (!$valid) {
+        write-host "Error"
+        exit
+    }
+    $state = [PSCustomObject]@{
+        freeElementIndexes = $freeElements
+        freeElementValues  = @(0) * $freeElements.Count
+        total              = $total
+    }
 
-$total = Sum-Matrix -matrixInput $matrix -knownElements $knownElements
-write-host $total
+    $searchSpace = New-Object 'System.Collections.Stack'
+    $searchSpace.Push($state)
+    $minPushes = $state.total
+
+    while ($searchSpace.Count) {
+        $state = $searchSpace.Pop()
+        for ($freeIndex = 0; $freeIndex -lt $state.freeElementIndexes.Count; $freeIndex++) {
+            $newState = [PSCustomObject]@{
+                freeElementIndexes = $state.freeElementIndexes.clone()
+                freeElementValues  = $state.freeElementValues.clone()
+                total              = $null
+            }
+            $newState.freeElementValues[$freeIndex]++
+            $knownElements = @($null) * ($matrix[0].Count - 1)
+            0..($newState.freeElementIndexes.count - 1) | % {
+                $index = $newState.freeElementIndexes[$_]
+                $value = $newState.freeElementValues[$_]
+                $knownElements[$index] = $value
+            }
+            $valid, $newState.total = Sum-Matrix -matrixInput $matrix -knownElements $knownElements
+            # write-host "Button pushes: ($($knownElements -join ",")) = $total"
+            if ($valid -and $newState.total -le $minPushes) {
+                $minPushes = $newState.total
+                write-host "`tNew min total: $minPushes"
+                $searchSpace.Push($newState)
+            }
+        }
+    }
+    write-host "`t`tFinal min total: $minPushes"
+    $runningTotal += $minPushes
+}
+write-host $runningTotal
 
 
 
