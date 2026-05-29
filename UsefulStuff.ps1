@@ -4,7 +4,7 @@
 #Transpose an array of strings
 function Transpose-ArrayOfStrings {
 	param([string[]]$array)
-	0..($block[0].Length - 1) | % {
+	0..($array[0].Length - 1) | % {
 		$col = $_
 		0..($array.Count - 1) | % {
 			$row = $_
