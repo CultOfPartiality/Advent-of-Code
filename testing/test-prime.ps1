@@ -1,8 +1,10 @@
 
 
-$rounds = 500000
-$jobs = 16
+$rounds = 50000
+$jobs = 24
+
 0..($jobs - 1) | % { [PSCustomObject]@{
+        job = $_
         start = $rounds / $jobs * $_ + 1
         end   = $rounds / $jobs * ($_ + 1)
     } } | Foreach-Object -ThrottleLimit $jobs -Parallel {
@@ -30,7 +32,7 @@ $jobs = 16
             if ([System.Numerics.BigInteger]::ModPow($a, $d, $number) -eq 1) { continue }
             $allNEtoneg1 = $true
             for ($r = 0; $r -lt $s; $r++) {
-                $x = [System.Numerics.BigInteger]::ModPow($a, [System.Numerics.BigInteger]::Pow(2, $r) * $d, $number)
+                $x = [System.Numerics.BigInteger]::ModPow($a, [System.Numerics.BigInteger]::Pow(2, $r) * $d, $number) #TODO can optimise by only squaring the result from last time
                 if ( $x -eq ($number - 1)) {
                     $allNEtoneg1 = $false
                     break
@@ -53,6 +55,7 @@ $jobs = 16
             exit
         }
     }
+    write-host "Job $($PSItem.job) finished"
 }
 
 # (Measure-Command {
