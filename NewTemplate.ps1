@@ -39,11 +39,10 @@ $Path = "$PSScriptRoot/testcases/test1.txt"
 #function Solution {
 #    param ($Path)
 
-
 $data = get-content $Path
 
 <#WRITE CODE HERE, TEST, THEN PUT IN FUNCTION #>
-    
+   
 #}
 #Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" x
 #$measuredTime = measure-command {$result = Solution "$PSScriptRoot\input.txt"}
