@@ -13,20 +13,30 @@ function Solution {
 	$height = $data.count
 	$map = [int[, ]]::new($height,$width)
 
+	enum SeatState {
+		Floor = 0
+		Empty = 1
+		Occupied = 2
+	}
+
 	for ($y = 0; $y -lt $height; $y++) {
 		for ($x = 0; $x -lt $width; $x++) {
-			$map[$y, $x] = $data[$y][$x] -eq "L" ? 0 : -1
+			$map[$y, $x] = $data[$y][$x] -eq "L" ? [SeatState]::Empty : [SeatState]::Floor
 		}
 	}
 
 	function Get-8Coords {
-		param ($y, $x)
-		
-		(($y - 1), ($x - 1)), (($y - 1), $x), (($y - 1), ($x + 1)),
+		param ($y, $x, $height, $width)
+
+		$coords = (($y - 1), ($x - 1)), (($y - 1), $x), (($y - 1), ($x + 1)),
 		( $y, ($x - 1)), ( $y, ($x + 1)),
-		(($y + 1), ($x - 1)), (($y + 1), $x), (($y + 1), ($x + 1)) | ? {
-			$_[0] -ge 0 -and $_[0] -lt $height -and
-			$_[1] -ge 0 -and $_[1] -lt $width
+		(($y + 1), ($x - 1)), (($y + 1), $x), (($y + 1), ($x + 1))
+		foreach($coord in $coords){
+			if($coord[0] -ge 0 -and $coord[0] -lt $height -and
+			$coord[1] -ge 0 -and $coord[1] -lt $width
+			){
+				,$coord
+			}
 		}
 	}
 
@@ -36,25 +46,45 @@ function Solution {
 		$round++
 		write-host "Round $round"
 		$activity = $false
-		$newMap = $map.clone()
+		$newMap = [int[, ]]::new($height,$width)
 
 		for ($y = 0; $y -lt $height; $y++) {
 			for ($x = 0; $x -lt $width; $x++) {
-				$surroudingSeated = (Get-8Coords $y $x | ? { $map[$_] -eq 1}).count
-				if ($map[$y, $x] -eq 0 -and $surroudingSeated -eq 0) {
-					$newMap[$y, $x] = 1
+				if($map[$y, $x] -eq [SeatState]::Floor){continue}
+				$surroudingSeated = 0
+				foreach($coord in (Get-8Coords $y $x $height $width)){
+					if($map[$coord] -eq [seatstate]::Occupied){$surroudingSeated++}
+				}
+				if ($map[$y, $x] -eq [SeatState]::Empty -and $surroudingSeated -eq 0) {
+					$newMap[$y, $x] = [SeatState]::Occupied
 					$activity = $true
 				}
-				if ($map[$y, $x] -eq 1 -and $surroudingSeated -ge 4) {
-					$newMap[$y, $x] = 0
+				elseif ($map[$y, $x] -eq [SeatState]::Occupied -and $surroudingSeated -ge 4) {
+					$newMap[$y, $x] = [SeatState]::Empty
 					$activity = $true
+				}
+				else {
+					$newMap[$y, $x] = $map[$y, $x]
 				}
 			}
 		}
-		$map = $newMap
+		$map = $newMap.Clone()
+
+		# foreach ($y in 0..($height - 1)) {
+		# 	$line = ""
+		# 	foreach ($x in 0..($width - 1)) {
+		# 		$line += switch ([seatstate]$map[$y, $x]) {
+		# 			Floor { "." }
+		# 			Empty { "L" }
+		# 			Occupied { "#" }
+		# 			default { throw "Unknown seat state: $($map[$y, $x])" }
+		# 		}
+		# 	}
+		# 	write-host $line
+		# }
 	}
 
-	($map | ? { $_ -eq 1 }).count
+	($map | ? { $_ -eq [SeatState]::Occupied }).count
    
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 37
