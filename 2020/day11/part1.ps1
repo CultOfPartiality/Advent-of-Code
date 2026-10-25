@@ -11,18 +11,12 @@ function Solution {
 
 	$width = $data[0].Length
 	$height = $data.count
-	$map = [int[, ]]::new($height,$width)
+	$map = [psobject[, ]]::new($height,$width)
 
 	enum SeatState {
 		Floor = 0
 		Empty = 1
 		Occupied = 2
-	}
-
-	for ($y = 0; $y -lt $height; $y++) {
-		for ($x = 0; $x -lt $width; $x++) {
-			$map[$y, $x] = $data[$y][$x] -eq "L" ? [SeatState]::Empty : [SeatState]::Floor
-		}
 	}
 
 	function Get-8Coords {
@@ -40,52 +34,50 @@ function Solution {
 		}
 	}
 
+	for ($y = 0; $y -lt $height; $y++) {
+		for ($x = 0; $x -lt $width; $x++) {
+			$map[$y, $x] = [pscustomobject]@{
+				state = ($data[$y][$x] -eq "L" ? [SeatState]::Empty : [SeatState]::Floor),[SeatState]::Floor
+				neighbours = (Get-8Coords $y $x $height $width)
+			}
+		}
+	}
+
+	
+
 	$activity = $true
 	$round = 0
 	while ($activity) {
+		$currentState = $round % 2
+		$nextState = ($round+1) % 2
 		$round++
 		write-host "Round $round"
 		$activity = $false
-		$newMap = [int[, ]]::new($height,$width)
-
+		
 		for ($y = 0; $y -lt $height; $y++) {
 			for ($x = 0; $x -lt $width; $x++) {
-				if($map[$y, $x] -eq [SeatState]::Floor){continue}
+				$seat = $map[$y, $x]
+				if($seat.state[$currentState] -eq [SeatState]::Floor){continue}
 				$surroudingSeated = 0
-				foreach($coord in (Get-8Coords $y $x $height $width)){
-					if($map[$coord] -eq [seatstate]::Occupied){$surroudingSeated++}
+				foreach($coord in $seat.neighbours){
+					if($map[$coord].state[$currentState] -eq [seatstate]::Occupied){$surroudingSeated++}
 				}
-				if ($map[$y, $x] -eq [SeatState]::Empty -and $surroudingSeated -eq 0) {
-					$newMap[$y, $x] = [SeatState]::Occupied
+				if ($seat.state[$currentState] -eq [SeatState]::Empty -and $surroudingSeated -eq 0) {
+					$seat.state[$nextState] = [SeatState]::Occupied
 					$activity = $true
 				}
-				elseif ($map[$y, $x] -eq [SeatState]::Occupied -and $surroudingSeated -ge 4) {
-					$newMap[$y, $x] = [SeatState]::Empty
+				elseif ($seat.state[$currentState] -eq [SeatState]::Occupied -and $surroudingSeated -ge 4) {
+					$seat.state[$nextState] = [SeatState]::Empty
 					$activity = $true
 				}
-				else {
-					$newMap[$y, $x] = $map[$y, $x]
+				else{
+					$seat.state[$nextState] = $seat.state[$currentState]
 				}
 			}
 		}
-		$map = $newMap.Clone()
-
-		# foreach ($y in 0..($height - 1)) {
-		# 	$line = ""
-		# 	foreach ($x in 0..($width - 1)) {
-		# 		$line += switch ([seatstate]$map[$y, $x]) {
-		# 			Floor { "." }
-		# 			Empty { "L" }
-		# 			Occupied { "#" }
-		# 			default { throw "Unknown seat state: $($map[$y, $x])" }
-		# 		}
-		# 	}
-		# 	write-host $line
-		# }
 	}
 
-	($map | ? { $_ -eq [SeatState]::Occupied }).count
-   
+	($map | ? { $_.State[$nextState] -eq [SeatState]::Occupied }).count
 }
 Unit-Test  ${function:Solution} "$PSScriptRoot/testcases/test1.txt" 37
 Unit-Test  ${function:Solution} "$PSScriptRoot/input.txt" 2126
