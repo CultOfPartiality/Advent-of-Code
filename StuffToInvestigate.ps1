@@ -21,3 +21,6 @@ $groups = $bigList | Group-Object -Property { [math]::Floor($counter.Value++ / $
 
 #Hashset class?
 # https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1?view=net-9.0
+
+#Ummm, vectors and matrixes?!
+# https://learn.microsoft.com/en-us/dotnet/api/system.numerics.vector2?view=net-10.0
