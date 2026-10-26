@@ -67,6 +67,20 @@ function gcd {
 	$a
 }
 
+#Extended Euclidean Algorithm, gives you x and y for: a*x + b*y = gcd(a,b)
+# https://cp-algorithms.com/algebra/extended-euclid-algorithm.html
+function xgcd {
+	param($a,$b)
+	
+	if($b -eq 0){
+		return ($a,1,0)
+	}
+	
+	$d,$x1,$y1 = xgcd $b ($a % $b)
+	
+	return $d, $y1, ($x1 - $y1 * [math]::Floor($a/$b))
+}
+
 # Lowest Common Multiple, either between 2 values or an array of values
 function lcm {
 	param($a, $b)
